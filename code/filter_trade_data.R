@@ -28,6 +28,7 @@ library(tidyr)
 library(stringr)
 library(dplyr)
 library(readr)
+library(recode)
 
 # Load data and codebooks
 data_2022 <- read_csv("data/trade_data/BACI_HS22_Y2022_V202601.csv")
