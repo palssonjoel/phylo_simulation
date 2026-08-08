@@ -1,0 +1,10 @@
+# Changelog
+
+
+## 08-08-2026: Setting up
+Author: Joel Pålsson
+
+### Changes
+ - Added pig trade data parsing code. Data from BACI 2024, 2023, 2022 are now filtered to only live pig 
+ trade and merged. Country filtering is not implemented. This is saved in output folder to allow
+ github push.    
