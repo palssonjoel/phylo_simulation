@@ -28,7 +28,6 @@ library(tidyr)
 library(stringr)
 library(dplyr)
 library(readr)
-library(recode)
 
 # Load data and codebooks
 data_2022 <- read_csv("data/trade_data/BACI_HS22_Y2022_V202601.csv")
@@ -96,7 +95,8 @@ all_data <- all_data |>
   rename()
 
 
-
+# Save
+write.csv(all_data, "output/pig_stats_filtered.csv")
 
 
 
