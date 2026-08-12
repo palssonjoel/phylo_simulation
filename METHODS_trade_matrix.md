@@ -40,3 +40,6 @@ Herd population
  - selected-country network rather than complete global (or EU) trade. The matrix describes only the probability of hosts moving within these countries, and any movement outside this is effectively ignored. Actual probability would differ, and demands the use of all available trade data (which is possible to do, but deemed unnecessary).
  - excluded trade routes outside the simulation network;
  - potential uncertainty in the conversion from tonnes to numbers of animals.
+
+## Possible improvements
+ - Structure code into a function, list of countries can be an argument, allows better scalability. 
