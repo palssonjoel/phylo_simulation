@@ -1,0 +1,83 @@
+=========================================================================
+Log Path: output/simulation/log/simulation_log.log
+Program Path:
+C:/Users/B508680/Documents/phylo_simulation/phylo_simulation/code/simulation.R
+Working Directory: C:/Users/B508680/Documents/phylo_simulation/phylo_simulation
+User Name: B508680
+R Version: 4.4.0 (2024-04-24 ucrt)
+Machine: C2201598 x86-64
+Operating System: Windows 10 x64 build 26200
+Base Packages: stats graphics grDevices utils datasets methods base
+Other Packages: logr_1.3.9 common_1.1.5 phangorn_2.12.1 ape_5.8-1 seqinr_4.2-36
+lubridate_1.9.5 forcats_1.0.1 stringr_1.6.0 dplyr_1.2.1 purrr_1.2.2 readr_2.2.0
+tidyr_1.3.2 tibble_3.3.1 ggplot2_4.0.3 tidyverse_2.0.0 nosoi_1.1.2
+data.table_1.18.4 tidytree_0.4.7
+Log Start Time: 2026-09-03 16:45:23.351377
+=========================================================================
+
+Starting transmission simulation Timepoint: 16:45:24 Max infected: 10000 Time
+limit: 365
+
+Transmission simulation complete. Time elapsed: 0.15 mins
+
+=========================================================================
+
+HKY substitution complete. Time elapsed: 2.25 mins
+
+Warning: downloaded length 0 != reported length 250
+
+Warning: cannot open URL
+'https://mghp.osn.xsede.org/bir190004-bucket01/archive.bioconductor.org/packages/3.20/data/annotation/bin/windows/contrib/4.4/PACKAGES.rds':
+HTTP status was '404 Not Found'
+
+Warning: downloaded length 0 != reported length 250
+
+Warning: cannot open URL
+'https://mghp.osn.xsede.org/bir190004-bucket01/archive.bioconductor.org/packages/3.20/data/annotation/bin/windows/contrib/4.4/PACKAGES.gz':
+HTTP status was '404 Not Found'
+
+Warning: downloaded length 0 != reported length 250
+
+Warning: cannot open URL
+'https://mghp.osn.xsede.org/bir190004-bucket01/archive.bioconductor.org/packages/3.20/data/experiment/bin/windows/contrib/4.4/PACKAGES.rds':
+HTTP status was '404 Not Found'
+
+Warning: downloaded length 0 != reported length 250
+
+Warning: cannot open URL
+'https://mghp.osn.xsede.org/bir190004-bucket01/archive.bioconductor.org/packages/3.20/data/experiment/bin/windows/contrib/4.4/PACKAGES.gz':
+HTTP status was '404 Not Found'
+
+Warning: downloaded length 0 != reported length 250
+
+Warning: cannot open URL
+'https://mghp.osn.xsede.org/bir190004-bucket01/archive.bioconductor.org/packages/3.20/workflows/bin/windows/contrib/4.4/PACKAGES.rds':
+HTTP status was '404 Not Found'
+
+Warning: downloaded length 0 != reported length 250
+
+Warning: cannot open URL
+'https://mghp.osn.xsede.org/bir190004-bucket01/archive.bioconductor.org/packages/3.20/workflows/bin/windows/contrib/4.4/PACKAGES.gz':
+HTTP status was '404 Not Found'
+
+Warning: downloaded length 0 != reported length 11781
+
+Warning: cannot open URL
+'https://bioconductor.org/packages/3.20/books/bin/windows/contrib/4.4/PACKAGES.rds':
+HTTP status was '404 Not Found'
+
+Warning: downloaded length 0 != reported length 11781
+
+Warning: cannot open URL
+'https://bioconductor.org/packages/3.20/books/bin/windows/contrib/4.4/PACKAGES.gz':
+HTTP status was '404 Not Found'
+
+Error in library(biostrings) : there is no package called ‘biostrings’
+Traceback:
+2: stop(packageNotFoundError(package, lib.loc, sys.call()))
+1: library(biostrings)
+
+=========================================================================
+Log End Time: 2026-09-03 16:59:50.200545
+Log Elapsed Time: 0 00:14:26
+=========================================================================

@@ -18,170 +18,188 @@ library(nosoi)
 library(tidyverse)
 library(seqinr)
 library(phangorn)
+library(logr)
+library(Biostrings)
 
-# Load population data for max infections
-pop_data <- read_csv("output/trade_movement_rates.csv") |> 
-  select(exporter, exporter_herd_size) |> 
-  distinct(exporter, exporter_herd_size) |> 
-  rename(country = exporter,
-         swine_heads = exporter_herd_size)
+run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_dir, sim_length) {
 
-# Load transition matrix
-transition_matrix <- as.matrix(
-  read.csv("output/trade_matrix_daily_probabilities.csv",
-           row.names = 1,
-           check.names = FALSE)
-)
-
-# Normalize to avoid floating point issue (twice on purpose)
-transition_matrix <- transition_matrix / rowSums(transition_matrix)
-transition_matrix <- transition_matrix / rowSums(transition_matrix)
-
-rowSums(transition_matrix) - 1
-# Set simulation functions
-
-# Core  set of functions for the simulation are:
-#   - pExit = Probability that host exits simulation (death, cured, etc.)
-#   - pMove = Probability that a host leaves its current state. NOT the same 
-#             as movement probabilities in transition matrix.
-#   - sdMove = SD of the random walk in pMove
-#   - nContact = Number of potentially infectious contacts an infected host can 
-#                encounter per unit of time.
-#   - pTrans = Probability of transmission over time, when a contact occurs. Can
-#              be set to e.g. seasionality. 
-# 
-
-# pMove is probability that one pig moves between locations. Settings to 10% for now
-p_move_func <- function(t) { 
-  return(0.1)
-}
-
-# nContact is not equal to R0 (number of 2nd infections) - pContact is only how
-# many individuals a host encounters. This is HIGHLY dependent on farm structure
-# age of pig, whether it's transported etc. Need to find data on this.
-# I will infer it from pig pen sizes. According to article below, it is 12 pigs 
-# per pen in Europe. There is likely variation to this. 
-# However, in a pen, 12 pigs doesn't mean 12 naive hosts, so nContacts can't equal this.
-# If it does, it causes explosive growth. I've adjusted it down. 
-# https://ahdb.org.uk/eupig-novelty-in-enrichment-material
-
-# ASSUMPTION: For now, I will assume that it is the same for all countries.
-n_contact_func <- function(t) {
-  abs(round(rnorm(1, 2, 1)))
-}
-
-# pTrans depends on incubation time, which is often cited between 1-3 days
-# p_max is a constant probability of transmission
-p_trans_func <- function(t, p_max, t_incubation) {
-  if(t < t_incubation){p = 0}
-  if(t > t_incubation){p = p_max}
-  return(p)
-}
-
-t_incub_func <- function(x){pmax(0, rnorm(x, mean = 2, sd = 0.5))}
-p_max_func <- function(x){rbeta(x, shape1=1, shape2=3)}
-
-
-# As per one article,  death rate due to swIAV is
-# between 10-15%, with up to 100% morbidity. But this is over the course of an
-# entire illness, I'll use a duration based exit, so hosts can't exit before
-# the incubation period is done.
-# https://pmc.ncbi.nlm.nih.gov/articles/PMC7587018/
-
-# Approach: zero exit probability duing incubation, then a 1/5 probability of exiting
-# per day. 
-
-p_exit_func <- function(t, t_incubation) {
-  if (t < t_incubation) { return(0) }
-  else {
-    return(1/5)  # ≈ 0.20/day → mean ~5 days post-incubation illness
+  # Normalize to avoid floating point issue (twice on purpose)
+  transition_matrix <- transition_matrix / rowSums(transition_matrix)
+  transition_matrix <- transition_matrix / rowSums(transition_matrix)
+  
+  rowSums(transition_matrix) - 1
+  # Set simulation functions
+  
+  # Core  set of functions for the simulation are:
+  #   - pExit = Probability that host exits simulation (death, cured, etc.)
+  #   - pMove = Probability that a host leaves its current state. NOT the same 
+  #             as movement probabilities in transition matrix.
+  #   - sdMove = SD of the random walk in pMove
+  #   - nContact = Number of potentially infectious contacts an infected host can 
+  #                encounter per unit of time.
+  #   - pTrans = Probability of transmission over time, when a contact occurs. Can
+  #              be set to e.g. seasionality. 
+  # 
+  
+  # pMove is probability that one pig moves between locations. Settings to 10% for now
+  p_move_func <- function(t) { 
+    return(0.1)
   }
+  
+  # nContact is not equal to R0 (number of 2nd infections) - pContact is only how
+  # many individuals a host encounters. This is HIGHLY dependent on farm structure
+  # age of pig, whether it's transported etc. Need to find data on this.
+  # I will infer it from pig pen sizes. According to article below, it is 12 pigs 
+  # per pen in Europe. There is likely variation to this. 
+  # However, in a pen, 12 pigs doesn't mean 12 naive hosts, so nContacts can't equal this.
+  # If it does, it causes explosive growth. I've adjusted it down. 
+  # https://ahdb.org.uk/eupig-novelty-in-enrichment-material
+  
+  # ASSUMPTION: For now, I will assume that it is the same for all countries.
+  n_contact_func <- function(t) {
+    abs(round(rnorm(1, 2, 1)))
+  }
+  
+  # pTrans depends on incubation time, which is often cited between 1-3 days
+  # p_max is a constant probability of transmission
+  p_trans_func <- function(t, p_max, t_incubation) {
+    if(t < t_incubation){p = 0}
+    if(t > t_incubation){p = p_max}
+    return(p)
+  }
+  
+  t_incub_func <- function(x){pmax(0, rnorm(x, mean = 2, sd = 0.5))}
+  p_max_func <- function(x){rbeta(x, shape1=1, shape2=3)}
+  
+  
+  # As per one article,  death rate due to swIAV is
+  # between 10-15%, with up to 100% morbidity. But this is over the course of an
+  # entire illness, I'll use a duration based exit, so hosts can't exit before
+  # the incubation period is done.
+  # https://pmc.ncbi.nlm.nih.gov/articles/PMC7587018/
+  
+  # Approach: zero exit probability duing incubation, then a 1/5 probability of exiting
+  # per day. 
+  
+  p_exit_func <- function(t, t_incubation) {
+    if (t < t_incubation) { return(0) }
+    else {
+      return(1/5)  # ≈ 0.20/day → mean ~5 days post-incubation illness
+    }
+  }
+  
+  ################################################################################
+  # Epidemic dynamics histograms
+  ################################################################################
+  
+  # Number of simulated values
+  n <- 10000
+  
+  # Generate values
+  t_incub <- t_incub_func(n)
+  p_max <- p_max_func(n)
+  n_contacts <- replicate(n, n_contact_func(0))
+  
+  # Histograms
+ incub_hist <- hist(
+    t_incub,
+    breaks = 50,
+    main = "Distribution of incubation time",
+    xlab = "Incubation time",
+    ylab = "Frequency"
+  )
+  
+ p_max_hist <- hist(
+    p_max,
+    breaks = 50,
+    main = "Distribution of maximum transmission probability",
+    xlab = "p_max",
+    ylab = "Frequency"
+  )
+  
+  n_contacts_hist <- hist(
+    n_contacts,
+    breaks = seq(-0.5, max(n_contacts) + 0.5, by = 1),
+    main = "Distribution of nContact",
+    xlab = "Number of contacts",
+    ylab = "Frequency"
+  )
+  
+  # Save plots
+  png(file.path(out_dir, "incub_hist.png"), width = 800, height = 600)
+  plot(incub_hist, main = "Distribution of incubation time", xlab = "Incubation time")
+  dev.off()
+  
+  png(file.path(out_dir, "p_max_hist.png"), width = 800, height = 600)
+  plot(p_max_hist, main = "Distribution of maximum transmission probability", xlab = "p_max")
+  dev.off()
+  
+  png(file.path(out_dir, "n_contacts_hist.png"), width = 800, height = 600)
+  plot(n_contacts_hist, main = "Distribution of nContact", xlab = "Number of contacts")
+  dev.off()
+  
+  ################################################################################
+  # Run transmission simulation
+  ################################################################################
+  
+  msg <- (paste0("Starting transmission simulation\n",
+                   "Timepoint: ", format(Sys.time(), "%H:%M:%S"), "\n",
+                   "Max infected: ", max_infections, "\n",
+                   "Time limit: ", sim_length, "\n"))
+  log_print(msg)
+  
+  time_start <- Sys.time()
+  
+  simulation <- nosoiSim(type="single", popStructure="discrete",
+                         length.sim=sim_length, max.infected=max_infections, init.individuals=1, init.structure="Denmark", 
+                         
+                         structure.matrix=transition_matrix,
+                         
+                         pExit = p_exit_func,
+                         param.pExit=list(t_incubation=t_incub_func),
+                         timeDep.pExit=FALSE,
+                         diff.pExit=FALSE,
+                         
+                         pMove = p_move_func,
+                         param.pMove=NA,
+                         timeDep.pMove=FALSE,
+                         diff.pMove=FALSE,
+                         
+                         nContact=n_contact_func,
+                         param.nContact=NA,
+                         timeDep.nContact=FALSE,
+                         diff.nContact=FALSE,
+                         
+                         pTrans = p_trans_func,
+                         param.pTrans = list(p_max=p_max_func,t_incubation=t_incub_func),
+                         timeDep.pTrans=FALSE,
+                         diff.pTrans=FALSE,
+                         
+                         prefix.host="H",
+                         print.progress=TRUE,
+                         print.step=10)
+  
+  time_end <- Sys.time()
+  duration <- difftime(time_end, time_start, units = "mins")
+  
+  msg <- paste0(
+    "Transmission simulation complete. Time elapsed: ",
+    round(as.numeric(duration), 2), " ", units(duration)
+  )
+  
+  log_print(msg)
+  log_print("=========================================================================")
+  
+  return(simulation)
+  #tree <- getTransmissionTree(simulation)
+  
+  #ggtree(tree) + 
+  #  geom_nodepoint(aes(color=state)) + 
+  #  geom_tippoint(aes(color=state)) +
+  #  theme_tree2() + xlab("Time (t)") + theme(legend.position = c(0.05,0.8), 
+  #                                           legend.title = element_blank(),
+  #                                           legend.key = element_blank())
 }
-
-################################################################################
-# Epidemic dynamics histograms
-################################################################################
-
-# Number of simulated values
-n <- 10000
-
-# Generate values
-t_incub <- t_incub_func(n)
-p_max <- p_max_func(n)
-n_contacts <- replicate(n, n_contact_func(0))
-
-# Histograms
-hist(
-  t_incub,
-  breaks = 50,
-  main = "Distribution of incubation time",
-  xlab = "Incubation time",
-  ylab = "Frequency"
-)
-
-hist(
-  p_max,
-  breaks = 50,
-  main = "Distribution of maximum transmission probability",
-  xlab = "p_max",
-  ylab = "Frequency"
-)
-
-hist(
-  n_contacts,
-  breaks = seq(-0.5, max(n_contacts) + 0.5, by = 1),
-  main = "Distribution of nContact",
-  xlab = "Number of contacts",
-  ylab = "Frequency"
-)
-
-################################################################################
-# Run transmission simulation
-################################################################################
-set.seed(12092)
-max_infections = 10000
-
-simulation <- nosoiSim(type="single", popStructure="discrete",
-                             length.sim=365, max.infected=max_infections, init.individuals=1, init.structure="Denmark", 
-                             
-                             structure.matrix=transition_matrix,
-                             
-                             pExit = p_exit_func,
-                             param.pExit=list(t_incubation=t_incub_func),
-                             timeDep.pExit=FALSE,
-                             diff.pExit=FALSE,
-                             
-                             pMove = p_move_func,
-                             param.pMove=NA,
-                             timeDep.pMove=FALSE,
-                             diff.pMove=FALSE,
-                             
-                             nContact=n_contact_func,
-                             param.nContact=NA,
-                             timeDep.nContact=FALSE,
-                             diff.nContact=FALSE,
-                             
-                             pTrans = p_trans_func,
-                             param.pTrans = list(p_max=p_max_func,t_incubation=t_incub_func),
-                             timeDep.pTrans=FALSE,
-                             diff.pTrans=FALSE,
-                             
-                             prefix.host="H",
-                             print.progress=TRUE,
-                             print.step=10)
-
-
-tree <- getTransmissionTree(simulation)
-
-
-ggtree(tree) + 
-  geom_nodepoint(aes(color=state)) + 
-  geom_tippoint(aes(color=state)) +
-  theme_tree2() + xlab("Time (t)") + theme(legend.position = c(0.05,0.8), 
-                                           legend.title = element_blank(),
-                                           legend.key = element_blank())
-
-
 
 ################################################################################
 # HKY model
@@ -230,7 +248,7 @@ hky_nosoi <- function(ref_genome, mu = 7.6e-3, kappa = 4.5, host_data) {
   
   # HKY PARAMETERS
   bases <- c("a", "c", "g", "t")
-  mu <- mu / 365.25 # HA mutation rate per day
+  mu_daily <- mu / 365.25 # HA mutation rate per day
   baseComp <- table(ref_genome)
   baseFreq <- as.numeric(baseComp) / length(ref_genome)
   names(baseFreq) <- names(baseComp)
@@ -238,10 +256,10 @@ hky_nosoi <- function(ref_genome, mu = 7.6e-3, kappa = 4.5, host_data) {
   # beta is "base rate" appied to transversions
   # Formula explained: given these base frequencies and this kappa, 
   # what value of beta makes the overall average substitution rate come out to exactly mu?
-  beta <- mu/(2*(baseFreq['a']*baseFreq['c']+baseFreq['a']*baseFreq['t']+baseFreq['c']*baseFreq['g']+baseFreq['g']*baseFreq['t'])+
+  beta <- mu_daily/(2*(baseFreq['a']*baseFreq['c']+baseFreq['a']*baseFreq['t']+baseFreq['c']*baseFreq['g']+baseFreq['g']*baseFreq['t'])+
                 2*kappa*(baseFreq['a']*baseFreq['g']+baseFreq['c']*baseFreq['t']))
   
-  # alpha is transtion rate
+  # alpha is transion rate
   alpha <- kappa * beta
   
   # Q matrix
@@ -272,6 +290,20 @@ hky_nosoi <- function(ref_genome, mu = 7.6e-3, kappa = 4.5, host_data) {
   # Add index sequence
   host_table$seq <- vector("list", nrow(host_table))
   host_table$seq[[1]] <- ref_genome # Apend ref genome to first host
+  
+  # Make readable strings for log
+  base_comp_str <- paste(names(baseComp), baseComp, sep = "=", collapse = ", ")
+  base_freq_str <- paste(names(baseFreq), round(baseFreq, 4), sep = "=", collapse = ", ")
+  
+  msg <- paste0(
+    "Applying HKY substitution model\n",
+    "Timepoint: ", format(Sys.time(), "%H:%M:%S"), "\n\n",
+    "Mutation rate: ", mu, "\n",
+    "Transversion rate: ", beta, "\n",
+    "Transition rate: ", alpha, "\n",
+    "Kappa: ", kappa, "\n\n",
+    "Reference base composition: ", base_comp_str, "\n")
+  time_start <- Sys.time()
   
   # Apply HKY to sequences
   evolve <- function(host_table, E, E_1, eigvals, bases) {
@@ -312,12 +344,52 @@ hky_nosoi <- function(ref_genome, mu = 7.6e-3, kappa = 4.5, host_data) {
   sequences <- evolve(host_table, E, E_1, eigvals, bases)
   host_table$seq <- sequences[host_table$hosts.ID]
   
-  return(host_table)
+  time_end <- Sys.time()
+  duration <- difftime(time_end, time_start, units = "mins")
   
+  msg <- paste0(
+    "HKY substitution complete. Time elapsed: ",
+    round(as.numeric(duration), 2), " ", units(duration)
+  )
+  
+  log_print(msg)
+  
+  return(host_table)
 }
 
+run_simulation <- function() {
+  # This runs both the transmission chain and HKY simulation
+  
+  # SETUP
+  out_dir <- "output/simulation/"
+  dir.create(out_dir, recursive = TRUE, showWarnings = TRUE)
+  
+  options("logr.notes" = FALSE)
+  log_open(file_name = paste0(out_dir, "simulation_log"))
+  
+  set.seed(12092)
+  transition_matrix <- as.matrix(
+    read.csv("output/trade_matrix_daily_probabilities.csv",
+             row.names = 1,
+             check.names = FALSE))
+  
+  # TRANSMISSION SIMULATION USING NOSOI
+  trans_simulation <- run_nosoi(transition_matrix, max_infections = 10000, sim_length = 365, out_dir = out_dir)
+  
+  # RUN HKY SUBSTITION
+  host_data <-  getHostData(trans_simulation)
+  ref_genome <- read.fasta("data/ref_genome.fasta", forceDNAtolower = FALSE, set.attributes = FALSE)[[1]]
+  
+  simulation_hky <- hky_nosoi(ref_genome = ref_genome, host_data = host_data)
+  
+  # Save sequences
+  # THIS NEEDS FIXING!!!!! 
+  IDs <- simulation_hky$hosts.ID
+  sequences <- simulation_hky$seq
+  names(sequences) <- IDs
+  multifasta <- Biostrings::DNAStringSetList(sequences)
+  Biostrings::writeXStringSet(multifasta, "sequences.fasta")
+  
+  log_close()
+}
 
-host_data <-  getHostData(simulation)
-ref_genome <- read.fasta("data/ref_genome.fasta", forceDNAtolower = FALSE, set.attributes = FALSE)[[1]]
-
-test <- hky_nosoi(ref_genome = ref_genome, host_data = host_data)

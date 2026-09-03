@@ -1,4 +1,9 @@
 # Generating the transition matrix
+
+Relevant code: 
+ - filter_trade_data.R
+ - create_trans_matrix.R 
+ 
 The transition matrix is necessary for the simulation to run. It defines the probability of a host to move between discrete locations, where each row and column sums to 1. The question centers on sampling bias and uneven trade flows, and this should be reflected in the matrix. Thus, the structure matrix describes the destination distribution of movements and does not encode the absolute frequency of movement. Absolute movement rates are retained separately.
 
 The current approach is to:
@@ -31,8 +36,6 @@ Herd population
     Why November–December is used.
     Why Live swine, domestic species is used rather than summing the four categories.
 
-
-
 ## Limitations
  - fixed animal weights;
  - annual/three-year trade data converted to daily averages;
@@ -43,3 +46,48 @@ Herd population
 
 ## Possible improvements
  - Structure code into a function, list of countries can be an argument, allows better scalability. 
+ 
+# Simulating a transmission chain
+
+Relevant code: 
+ - simulation.R
+
+## Description 
+Using the transition matrix, a transmission chain is simulated using the nosoi package. This is an agent-based, stochastic transmission chain simulator developed by Lquime et al. It uses discrete space which is defined by the countries present in the transition matrix, with one initial infected individual in Denmark. 
+
+Source:
+Sebastian Lequime, Paul Bastide, Simon Dellicour, Philippe Lemey & Guy Baele (2020) nosoi: A stochastic agent-based transmission chain simulation framework in R. Methods in Ecology and Evolution 11:1002-1007 doi:10.1111/2041-210X.13422
+
+## Assumptions
+ - Constant probability of transmission once a host is infectious
+ - Transmission period is same as disease lenght, minus incubation time. In reality, virus' shed beyond this period.
+ - All variables are the same for all locations
+ 
+# HKY substituion model
+An HKY substition model is applied to the transmission chain produced by nosoi. Transition/transversion rate differences are defined by the ratio kappa. Parts of Layan et al. HKY code has been adapted here.
+
+Logic:
+For each host, it checks who they were infected by and pulls their sequence. A substituion rate is then applied to this sequence for the amount of time between when the infector was infected, and when the host in quesion was infected. The logic here is the same as Layan et al. 
+
+## Assumptions
+ - Sites evolve independently
+ - Time-homogeneity: substitution rate matrix is constant across entire simulation
+ - Base frequencies are stationary according to the reference genomes frequencies across the simulation. Drift not allowed.
+ - Kappa is fixed and uniform across sites
+ - All sites evolve at the same rate.
+ - No selection, purely neutral drift.
+
+
+Source: github.com/mlayan/Sampling_bias
+
+
+
+
+
+
+
+
+
+
+
+
