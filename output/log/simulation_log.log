@@ -1,0 +1,41 @@
+=========================================================================
+Log Path:
+C:/Users/B508680/Documents/phylo_simulation/phylo_simulation/output/log/simulation_log.log
+Working Directory: C:/Users/B508680/Documents/phylo_simulation/phylo_simulation
+User Name: B508680
+R Version: 4.4.0 (2024-04-24 ucrt)
+Machine: C2201598 x86-64
+Operating System: Windows 10 x64 build 26200
+Base Packages: stats4 stats graphics grDevices utils datasets methods base
+Other Packages: Biostrings_2.74.1 GenomeInfoDb_1.42.3 XVector_0.46.0
+IRanges_2.40.1 S4Vectors_0.44.0 BiocGenerics_0.52.0 logr_1.3.9 common_1.1.5
+phangorn_2.12.1 ape_5.8-1 seqinr_4.2-36 lubridate_1.9.5 forcats_1.0.1
+stringr_1.6.0 dplyr_1.2.1 purrr_1.2.2 readr_2.2.0 tidyr_1.3.2 tibble_3.3.1
+ggplot2_4.0.3 tidyverse_2.0.0 nosoi_1.1.2 data.table_1.18.4
+Log Start Time: 2026-09-04 11:24:22.690963
+=========================================================================
+
+Simulation seed set to: 12092
+
+Starting transmission simulation Timepoint: 11:24:22 Max infected: 10000 Time
+limit: 365
+
+Transmission simulation complete. Time elapsed: 0.12 mins
+
+=========================================================================
+
+Applying HKY substitution model Timepoint: 11:24:30
+
+Mutation rate: 0.0076 Transversion rate: 1.3107519587407e-05 Transition rate:
+5.89838381433317e-05 Kappa: 4.5
+
+Reference base composition: a=590, c=333, g=361, t=417
+
+HKY substitution complete. Time elapsed: 2.09 mins
+
+Simulation finished successfully. Final output saved as simulation_data.csv
+
+=========================================================================
+Log End Time: 2026-09-04 11:26:38.685298
+Log Elapsed Time: 0 00:02:15
+=========================================================================

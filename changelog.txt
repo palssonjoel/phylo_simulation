@@ -17,3 +17,9 @@ Author: Joel Pålsson
 
 ## 03-09-2026: HKY simulation
  - Implemented a HKY simulation. It iterates over each host in the nosoi transmission chain output and evolves the sequence of the host from whom it was infected at a probability dependent on how long the previous host was infected.
+ 
+## 04-09-2026:
+ - Improved structure, entire script can be intitiated from one function
+ - Added log output
+ - Added functionality to save sequences (which are aligned by default)
+ - Added arguments and ability to run from command line

@@ -17,4 +17,4 @@ To do:
  - Structure scripts to work by running one initiating function call
  - Add log output with relevant warnings and timestamps
  - For HKY, entire sequences are saved. This may not scale well, consider saving only snp locations
- 
+ - Save output and implement checks - if files exist, don't run.

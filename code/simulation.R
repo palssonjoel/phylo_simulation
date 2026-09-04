@@ -147,9 +147,14 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
                    "Max infected: ", max_infections, "\n",
                    "Time limit: ", sim_length, "\n"))
   log_print(msg)
+
+  # Save nosoi simulation output in log
+  lf <- log_path()
+  con <- file(lf, open = "a")
+  sink(con, split = TRUE, type = "output")
   
+  # Run simulation
   time_start <- Sys.time()
-  
   simulation <- nosoiSim(type="single", popStructure="discrete",
                          length.sim=sim_length, max.infected=max_infections, init.individuals=1, init.structure="Denmark", 
                          
@@ -178,27 +183,32 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
                          prefix.host="H",
                          print.progress=TRUE,
                          print.step=10)
-  
   time_end <- Sys.time()
   duration <- difftime(time_end, time_start, units = "mins")
+  
+  sink(type = "output")
+  close(con)
   
   msg <- paste0(
     "Transmission simulation complete. Time elapsed: ",
     round(as.numeric(duration), 2), " ", units(duration)
   )
-  
   log_print(msg)
+  
   log_print("=========================================================================")
   
-  return(simulation)
-  #tree <- getTransmissionTree(simulation)
+  # Create and save transmission tree
+  tree <- getTransmissionTree(simulation)
   
-  #ggtree(tree) + 
-  #  geom_nodepoint(aes(color=state)) + 
-  #  geom_tippoint(aes(color=state)) +
-  #  theme_tree2() + xlab("Time (t)") + theme(legend.position = c(0.05,0.8), 
-  #                                           legend.title = element_blank(),
-  #                                           legend.key = element_blank())
+  ggtree(tree) + 
+    geom_nodepoint(aes(color=state)) + 
+    geom_tippoint(aes(color=state)) +
+    theme_tree2() + xlab("Time (t)") + theme(legend.position = c(0.05,0.8), 
+                                             legend.title = element_blank(),
+                                             legend.key = element_blank())
+  ggsave(paste0(out_dir, "transmission_tree.png"))
+  
+  return(simulation)
 }
 
 ################################################################################
@@ -282,10 +292,10 @@ hky_nosoi <- function(ref_genome, mu = 7.6e-3, kappa = 4.5, host_data) {
   E_1 <- solve(E)        # inverse of E
   
   # Construct host_table
-  host_table <- host_data |> 
-    select(hosts.ID, inf.by, inf.time, out.time) 
+ # host_table <- host_data |> 
+  #  select(hosts.ID, inf.by, inf.time, out.time) 
   
-  host_table <- calculate_inf_duration(host_table) # Calc. evolutionary time
+  host_table <- calculate_inf_duration(host_data) # Calc. evolutionary time
   
   # Add index sequence
   host_table$seq <- vector("list", nrow(host_table))
@@ -303,6 +313,8 @@ hky_nosoi <- function(ref_genome, mu = 7.6e-3, kappa = 4.5, host_data) {
     "Transition rate: ", alpha, "\n",
     "Kappa: ", kappa, "\n\n",
     "Reference base composition: ", base_comp_str, "\n")
+  log_print(msg)
+  
   time_start <- Sys.time()
   
   # Apply HKY to sequences
@@ -357,17 +369,23 @@ hky_nosoi <- function(ref_genome, mu = 7.6e-3, kappa = 4.5, host_data) {
   return(host_table)
 }
 
-run_simulation <- function() {
+run_simulation <- function(max_infections, 
+                           sim_length,
+                           seed, 
+                           out_dir) {
   # This runs both the transmission chain and HKY simulation
   
   # SETUP
-  out_dir <- "output/simulation/"
   dir.create(out_dir, recursive = TRUE, showWarnings = TRUE)
+  set.seed(seed)
   
   options("logr.notes" = FALSE)
   log_open(file_name = paste0(out_dir, "simulation_log"))
   
-  set.seed(12092)
+  if(!is.null(seed)) {
+    log_print(paste("Simulation seed set to:", seed)) 
+  }
+  
   transition_matrix <- as.matrix(
     read.csv("output/trade_matrix_daily_probabilities.csv",
              row.names = 1,
@@ -381,15 +399,41 @@ run_simulation <- function() {
   ref_genome <- read.fasta("data/ref_genome.fasta", forceDNAtolower = FALSE, set.attributes = FALSE)[[1]]
   
   simulation_hky <- hky_nosoi(ref_genome = ref_genome, host_data = host_data)
+  simulation_hky$seq <- sapply(simulation_hky$seq, function(x) paste(x, collapse = "")) # Collapse character vectors to strings
   
   # Save sequences
-  # THIS NEEDS FIXING!!!!! 
   IDs <- simulation_hky$hosts.ID
   sequences <- simulation_hky$seq
   names(sequences) <- IDs
-  multifasta <- Biostrings::DNAStringSetList(sequences)
-  Biostrings::writeXStringSet(multifasta, "sequences.fasta")
+  multifasta <- Biostrings::DNAStringSet(sequences)
+  Biostrings::writeXStringSet(multifasta, paste0(out_dir, "sequences.fasta"))
   
+  # Final output
+  write.csv(simulation_hky, paste0(out_dir, "simulation_data.csv"))
+  
+  log_print("Simulation finished successfully. Final output saved as simulation_data.csv")
   log_close()
 }
+
+# Arguments (positional, no checks)
+args <- commandArgs(trailingOnly = TRUE)
+
+max_infections <- if(length(args) >= 1) as.numeric(args[1])   else 10000
+sim_length     <- if(length(args) >= 2) as.numeric(args[2])   else 365
+seed           <- if(length(args) >= 3) as.numeric(args[3])   else NULL
+out_dir        <- if(length(args) >= 4) as.character(args[4]) else "/output/simulation/"
+
+setwd("..")
+base_dir <- normalizePath(".")
+out_dir <- paste0(base_dir, out_dir)
+
+cat("Working directory:", getwd(), "\n")
+cat("Output directory:", out_dir, "\n")
+
+seed = 12092 # For testing
+
+run_simulation(max_infections = max_infections,
+               sim_length = sim_length,
+               seed = seed,
+               out_dir = out_dir)
 
