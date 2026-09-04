@@ -15,7 +15,10 @@
 # ============================================================================== 
 
 library(nosoi)
-library(tidyverse)
+library(dplyr)
+library(ggtree)
+library(ggplot2)
+library(treeio)
 library(seqinr)
 library(phangorn)
 library(logr)
@@ -197,17 +200,11 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   
   log_print("=========================================================================")
   
-  # Create and save transmission tree
+  # Get and save transmission tree
   tree <- getTransmissionTree(simulation)
-  
-  ggtree(tree) + 
-    geom_nodepoint(aes(color=state)) + 
-    geom_tippoint(aes(color=state)) +
-    theme_tree2() + xlab("Time (t)") + theme(legend.position = c(0.05,0.8), 
-                                             legend.title = element_blank(),
-                                             legend.key = element_blank())
-  ggsave(paste0(out_dir, "transmission_tree.png"))
-  
+  write.beast(tree, file.path(out_dir, "transmission_tree.nexus"))
+  write.beast.newick(tree, file.path(out_dir, "transmission_tree.nwk"))
+ 
   return(simulation)
 }
 
@@ -392,7 +389,7 @@ run_simulation <- function(max_infections,
              check.names = FALSE))
   
   # TRANSMISSION SIMULATION USING NOSOI
-  trans_simulation <- run_nosoi(transition_matrix, max_infections = 10000, sim_length = 365, out_dir = out_dir)
+  trans_simulation <- run_nosoi(transition_matrix, max_infections = max_infections, sim_length = 365, out_dir = out_dir)
   
   # RUN HKY SUBSTITION
   host_data <-  getHostData(trans_simulation)
@@ -402,7 +399,8 @@ run_simulation <- function(max_infections,
   simulation_hky$seq <- sapply(simulation_hky$seq, function(x) paste(x, collapse = "")) # Collapse character vectors to strings
   
   # Save sequences
-  IDs <- simulation_hky$hosts.ID
+  simulation_hky$date.time <- simulation_hky$inf.time / 365.25 # Create a BEAST friendly time format
+  IDs <- paste(simulation_hky$hosts.ID, simulation_hky$current.in, simulation_hky$date.time, sep = "|")
   sequences <- simulation_hky$seq
   names(sequences) <- IDs
   multifasta <- Biostrings::DNAStringSet(sequences)
@@ -417,7 +415,7 @@ run_simulation <- function(max_infections,
 
 # Arguments (positional, no checks)
 args <- commandArgs(trailingOnly = TRUE)
-
+cat("Arguments received:", length(args), "->", paste(args, collapse = ", "), "\n")
 max_infections <- if(length(args) >= 1) as.numeric(args[1])   else 10000
 sim_length     <- if(length(args) >= 2) as.numeric(args[2])   else 365
 seed           <- if(length(args) >= 3) as.numeric(args[3])   else NULL
