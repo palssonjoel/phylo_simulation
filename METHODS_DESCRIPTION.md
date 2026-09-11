@@ -66,6 +66,13 @@ Sebastian Lequime, Paul Bastide, Simon Dellicour, Philippe Lemey & Guy Baele (20
 # HKY substituion model
 An HKY substition model is applied to the transmission chain produced by nosoi. Transition/transversion rate differences are defined by the ratio kappa. Parts of Layan et al. HKY code has been adapted here.
 
+The output from the simulation includes a sequence alignment where the sequence names include, in this ordeR:
+ - Host ID
+ - Host location AT END OF SIMULATION
+ - Time of entering simulation (infection) in decimal years.
+ 
+IMPORTANT: The time in the sequence alignment is time of infection, NOT time of exiting simulation since some hosts don't exit the simulation before it's complete. However, infection time does not necessarily the most realistic in terms of sampling.
+
 Logic:
 For each host, it checks who they were infected by and pulls their sequence. A substituion rate is then applied to this sequence for the amount of time between when the infector was infected, and when the host in quesion was infected. The logic here is the same as Layan et al. 
 
@@ -76,6 +83,7 @@ For each host, it checks who they were infected by and pulls their sequence. A s
  - Kappa is fixed and uniform across sites
  - All sites evolve at the same rate.
  - No selection, purely neutral drift.
+ - Time of infection is the same as time of sampling.
 
 
 Source: github.com/mlayan/Sampling_bias

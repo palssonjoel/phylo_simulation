@@ -23,3 +23,5 @@ Author: Joel Pålsson
  - Added log output
  - Added functionality to save sequences (which are aligned by default)
  - Added arguments and ability to run from command line
+ - Added decimal year time and formatted sequence alignment headers 
+ - Added tree output as nexus and newick files

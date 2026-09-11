@@ -18,3 +18,19 @@ To do:
  - Add log output with relevant warnings and timestamps
  - For HKY, entire sequences are saved. This may not scale well, consider saving only snp locations
  - Save output and implement checks - if files exist, don't run.
+ 
+ 
+################################################################################
+04-09-2026
+ 
+To-dos from the third have been completed, except the snp saving.
+ 
+The script now runs with the following arguments (in this order):
+ - Number of hosts to simulate
+ - Days to simulate
+ - Seed (not yet implemented)
+ - Path
+ 
+Example from windows:
+& "C:\Program Files\R\R-4.4.0\bin\Rscript.exe" simulation.R 1000 365 11111 /output/
+
