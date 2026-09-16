@@ -1,4 +1,6 @@
 ################################################################################
+Week 1
+
 03-09-202
 
 I have implemented a properitary HKY model which I think works. I need to figure
@@ -18,3 +20,16 @@ To do:
  - Add log output with relevant warnings and timestamps
  - For HKY, entire sequences are saved. This may not scale well, consider saving only snp locations
  - Save output and implement checks - if files exist, don't run.
+
+
+################################################################################
+# Week 3
+
+## 16-09-2026
+Sick last week, didn't do much. Tried doing a MASCOT run on a 10,000 host simulation.
+First, it crashed due to being paused because someone's jobs were more important than
+mine.
+
+Tried running again, and it appears successful withot errors. It took 43 hours.
+The file is not corrupted, but the tree is too large, I should create a sampling 
+script to subsample from my simulation.  
