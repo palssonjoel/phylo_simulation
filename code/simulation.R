@@ -384,7 +384,7 @@ run_simulation <- function(max_infections,
   }
   
   transition_matrix <- as.matrix(
-    read.csv("output/trade_matrix_daily_probabilities.csv",
+    read.csv("output/trade_matrix_daily_probabilities_eu.csv",
              row.names = 1,
              check.names = FALSE))
   
@@ -413,7 +413,7 @@ run_simulation <- function(max_infections,
   log_close()
 }
 
-# Arguments (positional, no checks)
+# Arguments (positional with defaults, no checks)
 args <- commandArgs(trailingOnly = TRUE)
 cat("Arguments received:", length(args), "->", paste(args, collapse = ", "), "\n")
 max_infections <- if(length(args) >= 1) as.numeric(args[1])   else 10000
@@ -421,7 +421,7 @@ sim_length     <- if(length(args) >= 2) as.numeric(args[2])   else 365
 seed           <- if(length(args) >= 3) as.numeric(args[3])   else NULL
 out_dir        <- if(length(args) >= 4) as.character(args[4]) else "/output/simulation/"
 
-setwd("..")
+#setwd("..")
 base_dir <- normalizePath(".")
 out_dir <- paste0(base_dir, out_dir)
 

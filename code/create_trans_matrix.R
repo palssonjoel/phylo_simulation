@@ -102,22 +102,100 @@ trade_data |>
   count(description, sort = TRUE)
 
 # Extract top 5 countries Denmark exports to. All three years added.
-dk_top_exports <- trade_data |> 
-  filter(exporter == "Denmark") |> 
-  group_by(importer) |> 
-  summarise(imp_sum = sum(quantity_heads)) |> 
-  arrange(desc(imp_sum)) |> 
-  slice(1:5)
+#dk_top_exports <- trade_data |> 
+#  filter(exporter == "Denmark") |> 
+#  group_by(importer) |> 
+#  summarise(imp_sum = sum(quantity_heads)) |> 
+#  arrange(desc(imp_sum)) |> 
+#  slice(1:5)
 
+#countries <- c(
+#  "Denmark",
+#  dk_top_exports$importer
+#)
+
+# Keep only relevant countries and clean dataframe
+#trade_data_filtered <- trade_data |> 
+#  filter(exporter %in% countries,
+#         importer %in% countries) |> 
+#  select(-product, -value, -year, -description, -quantity_kg, -quantity, -X) |> 
+#  group_by(exporter, importer) |> 
+#  summarise(
+#    quantity_heads = sum(quantity_heads, na.rm = TRUE),
+#    .groups = "drop"
+#  )
+
+# Instead of using top 5 importers of Denmark, use only imports/exports in EU
+# anything else is considered "other"
+
+# EU countries
 countries <- c(
+  "Albania",
+  "Andorra",
+  "Armenia",
+  "Austria",
+  "Azerbaijan",
+  "Belarus",
+  "Belgium",
+  "Bosnia and Herzegovina",
+  "Bulgaria",
+  "Croatia",
+  "Cyprus",
+  "Czechia",
   "Denmark",
-  dk_top_exports$importer
+  "Estonia",
+  "Finland",
+  "France",
+  "Georgia",
+  "Germany",
+  "Greece",
+  "Hungary",
+  "Iceland",
+  "Ireland",
+  "Italy",
+  "Kazakhstan",
+  "Kosovo",
+  "Latvia",
+  "Liechtenstein",
+  "Lithuania",
+  "Luxembourg",
+  "Malta",
+  "Moldova",
+  "Monaco",
+  "Montenegro",
+  "Netherlands",
+  "North Macedonia",
+  "Norway",
+  "Poland",
+  "Portugal",
+  "Romania",
+  "Russia",
+  "San Marino",
+  "Serbia",
+  "Slovakia",
+  "Slovenia",
+  "Spain",
+  "Sweden",
+  "Switzerland",
+  "Turkey",
+  "Ukraine",
+  "United Kingdom",
+  "Vatican City",
+  "Other"
 )
 
-# Keep relevant countries and clean dataframe
+# Filter EU countries. Anything else is "other"
 trade_data_filtered <- trade_data |> 
-  filter(exporter %in% countries,
-         importer %in% countries) |> 
+  mutate(
+    importer = case_when(
+      importer %in% countries ~ importer,
+      TRUE ~ "Other"
+    ),
+    exporter = case_when(
+      exporter %in% countries ~ exporter,
+      TRUE ~ "Other"
+    )
+  ) |> 
   select(-product, -value, -year, -description, -quantity_kg, -quantity, -X) |> 
   group_by(exporter, importer) |> 
   summarise(
@@ -162,7 +240,9 @@ complete_data <- trade_data_filtered |>
     rel_p_exp_to_imp =
       rate_exp_to_imp / sum(rate_exp_to_imp)
   ) |> 
-  ungroup()
+  ungroup() |> 
+  drop_na(exporter_herd_size)
+  
 
 # Create empty matrix
 trade_matrix <- matrix(0,
@@ -178,7 +258,18 @@ trade_matrix[
   )
 ] <- complete_data$rel_p_exp_to_imp
 
-# QA
+# Keep countries with at least some outgoing trade
+active_countries <- countries[rowSums(trade_matrix) > 0]
+
+# Remove countries with no outgoing trade
+trade_matrix <- trade_matrix[
+  active_countries,
+  active_countries,
+  drop = FALSE
+]
+
+# Normalize
+trade_matrix <- trade_matrix / rowSums(trade_matrix)
 
 # Check matrix requirements. SHould all be TRUE, and rowSums be 1.
 is.matrix(trade_matrix) 
@@ -196,10 +287,10 @@ any(trade_matrix < 0)
 # Save
 write.csv(
   trade_matrix,
-  "output/trade_matrix_daily_probabilities.csv",
+  "output/trade_matrix_daily_probabilities_eu.csv",
   row.names = TRUE)
 
 write.csv(
   complete_data,
-  "output/trade_movement_rates.csv",
+  "output/trade_movement_rates_eu.csv",
   row.names = FALSE)

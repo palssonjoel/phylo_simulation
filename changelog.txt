@@ -1,5 +1,6 @@
 Changelog
 
+################################################################################
 
 # Script: filter_trade_data.R
 ## 08-08-2026: Setting up
@@ -10,8 +11,19 @@ Author: Joel Pålsson
  trade and merged. Country filtering is not implemented. This is saved in output folder to allow
  github push.    
  
+## 10-09-2026: Extended filtering
+ - Now filtering all EU countries which have herd size data. Non EU countries grouped as "Other"
+
+################################################################################
+
 # Script: create_trans_matrix.R
- 
+
+## 10-09-2026: Extended transition matrix
+ - Created an extended transition matrix which includes all European countries that have herd size data, 
+ and which didn't have row sums of 0. Non EU countries are grouped as Other and treated as any other 
+ country in the matrix. Could consider removing.
+
+################################################################################
 
 # Script: simulation.R
 
@@ -23,3 +35,5 @@ Author: Joel Pålsson
  - Added log output
  - Added functionality to save sequences (which are aligned by default)
  - Added arguments and ability to run from command line
+ - Added decimal year time and formatted sequence alignment headers 
+ - Added tree output as nexus and newick files
