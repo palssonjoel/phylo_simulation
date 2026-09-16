@@ -1,5 +1,6 @@
 # Folders
 data/
+output/simulation
 
 # Files
 .Rhistory

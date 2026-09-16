@@ -94,52 +94,54 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   ################################################################################
   # Epidemic dynamics histograms
   ################################################################################
+  # Mainly used when setting up, but not useful for actual runs. 
+  # Remove comments to save them for each iteration.
   
   # Number of simulated values
-  n <- 10000
+  #n <- 10000
   
   # Generate values
-  t_incub <- t_incub_func(n)
-  p_max <- p_max_func(n)
-  n_contacts <- replicate(n, n_contact_func(0))
+  #t_incub <- t_incub_func(n)
+  #p_max <- p_max_func(n)
+  #n_contacts <- replicate(n, n_contact_func(0))
   
   # Histograms
- incub_hist <- hist(
-    t_incub,
-    breaks = 50,
-    main = "Distribution of incubation time",
-    xlab = "Incubation time",
-    ylab = "Frequency"
-  )
+ #incub_hist <- hist(
+#    t_incub,
+#    breaks = 50,
+#    main = "Distribution of incubation time",
+#    xlab = "Incubation time",
+#    ylab = "Frequency"
+#  )
   
- p_max_hist <- hist(
-    p_max,
-    breaks = 50,
-    main = "Distribution of maximum transmission probability",
-    xlab = "p_max",
-    ylab = "Frequency"
-  )
+# p_max_hist <- hist(
+#    p_max,
+#    breaks = 50,
+#    main = "Distribution of maximum transmission probability",
+#    xlab = "p_max",
+#    ylab = "Frequency"
+#  )
   
-  n_contacts_hist <- hist(
-    n_contacts,
-    breaks = seq(-0.5, max(n_contacts) + 0.5, by = 1),
-    main = "Distribution of nContact",
-    xlab = "Number of contacts",
-    ylab = "Frequency"
-  )
+#  n_contacts_hist <- hist(
+#    n_contacts,
+#    breaks = seq(-0.5, max(n_contacts) + 0.5, by = 1),
+#    main = "Distribution of nContact",
+#    xlab = "Number of contacts",
+#    ylab = "Frequency"
+#  )
   
   # Save plots
-  png(file.path(out_dir, "incub_hist.png"), width = 800, height = 600)
-  plot(incub_hist, main = "Distribution of incubation time", xlab = "Incubation time")
-  dev.off()
+  #png(file.path(out_dir, "incub_hist.png"), width = 800, height = 600)
+  #plot(incub_hist, main = "Distribution of incubation time", xlab = "Incubation time")
+  #dev.off()
   
-  png(file.path(out_dir, "p_max_hist.png"), width = 800, height = 600)
-  plot(p_max_hist, main = "Distribution of maximum transmission probability", xlab = "p_max")
-  dev.off()
+  #png(file.path(out_dir, "p_max_hist.png"), width = 800, height = 600)
+  #plot(p_max_hist, main = "Distribution of maximum transmission probability", xlab = "p_max")
+  #dev.off()
   
-  png(file.path(out_dir, "n_contacts_hist.png"), width = 800, height = 600)
-  plot(n_contacts_hist, main = "Distribution of nContact", xlab = "Number of contacts")
-  dev.off()
+  #png(file.path(out_dir, "n_contacts_hist.png"), width = 800, height = 600)
+  #plot(n_contacts_hist, main = "Distribution of nContact", xlab = "Number of contacts")
+  #dev.off()
   
   ################################################################################
   # Run transmission simulation
@@ -198,12 +200,10 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   )
   log_print(msg)
   
-  log_print("=========================================================================")
-  
   # Get and save transmission tree
   tree <- getTransmissionTree(simulation)
   write.beast(tree, file.path(out_dir, "transmission_tree.nexus"))
-  write.beast.newick(tree, file.path(out_dir, "transmission_tree.nwk"))
+  #write.beast.newick(tree, file.path(out_dir, "transmission_tree.nwk"))
  
   return(simulation)
 }
@@ -368,48 +368,88 @@ hky_nosoi <- function(ref_genome, mu = 7.6e-3, kappa = 4.5, host_data) {
 
 run_simulation <- function(max_infections, 
                            sim_length,
-                           seed, 
+                           run_no, 
                            out_dir) {
   # This runs both the transmission chain and HKY simulation
   
   # SETUP
-  dir.create(out_dir, recursive = TRUE, showWarnings = TRUE)
-  set.seed(seed)
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+  
+  #seed = 1242 
+  #set.seed(seed) # For testing
   
   options("logr.notes" = FALSE)
-  log_open(file_name = paste0(out_dir, "simulation_log"))
-  
-  if(!is.null(seed)) {
-    log_print(paste("Simulation seed set to:", seed)) 
-  }
+  log_open(file_name = paste0(out_dir, "simulation"))
   
   transition_matrix <- as.matrix(
-    read.csv("output/trade_matrix_daily_probabilities_eu.csv",
+    read.csv("../output/trade_matrix_daily_probabilities_eu.csv",
              row.names = 1,
              check.names = FALSE))
   
-  # TRANSMISSION SIMULATION USING NOSOI
-  trans_simulation <- run_nosoi(transition_matrix, max_infections = max_infections, sim_length = 365, out_dir = out_dir)
+  for(i in 1:run_no) {
+    
+    seed <- sample.int(9999999, 1)
+    set.seed(seed)
+    
+    log_print(paste0("Starting simulation no. ", i ,". Seed = ", seed))
+    
+    simulation_dir <- paste0(out_dir, "/", i)
+    dir.create(simulation_dir, recursive = TRUE, showWarnings = FALSE)
+    
+    # TRANSMISSION SIMULATION USING NOSOI
+    trans_simulation <- tryCatch({
+      run_nosoi(transition_matrix, max_infections = max_infections, sim_length = 365, out_dir = simulation_dir)
+    }, error = function(e) {
+      msg <- paste0("Replicate ", i, " nosoi run failed internally: ", conditionMessage(e))
+      message(msg)
+      log_print(msg)
+      log_print("=========================================================================")
+      
+      return(NULL)
+    })
+    
+    if (is.null(trans_simulation)) next  # crashed internally (e.g. epidemic too small)
+    
+    # Before running HKY, check that simulation did not go extinct
+    min_hosts <- 50
+    n_hosts <- nrow(getTableHosts(trans_simulation))
+    
+    if(n_hosts < min_hosts) {
+      msg <- paste0("Replicate ", i, " died out early (", n_hosts, " hosts) — skipping HKY step.")
+      message(msg)
+      log_print(msg)
+    } else {
+      
+      # Save full nosoi output
+      saveRDS(trans_simulation, paste0(simulation_dir, "/nosoi_sim.rds"))
+      
+      # RUN HKY SUBSTITION
+      host_data <-  getHostData(trans_simulation)
+      ref_genome <- read.fasta("../data/ref_genome.fasta", forceDNAtolower = FALSE, set.attributes = FALSE)[[1]]
+      
+      simulation_hky <- hky_nosoi(ref_genome = ref_genome, host_data = host_data)
+      simulation_hky$seq <- sapply(simulation_hky$seq, function(x) paste(x, collapse = "")) # Collapse character vectors to strings
+      
+      # Save sequences
+      simulation_hky$date.time <- simulation_hky$inf.time / 365.25 # Create a BEAST friendly time format
+      IDs <- paste(simulation_hky$hosts.ID, simulation_hky$current.in, simulation_hky$date.time, sep = "|")
+      sequences <- simulation_hky$seq
+      names(sequences) <- IDs
+      multifasta <- Biostrings::DNAStringSet(sequences)
+      Biostrings::writeXStringSet(multifasta, paste0(simulation_dir, "/sequences.fasta"))
+      
+      # Final output
+      write.csv(simulation_hky, paste0(simulation_dir, "/simulation_data.csv"))
+      
+      # Log
+      msg <- paste0(i, " simulations out of ", run_no, " complete.")
+      message(msg)
+      log_print(msg)
+      log_print("=========================================================================")
+    }
+  }
   
-  # RUN HKY SUBSTITION
-  host_data <-  getHostData(trans_simulation)
-  ref_genome <- read.fasta("data/ref_genome.fasta", forceDNAtolower = FALSE, set.attributes = FALSE)[[1]]
-  
-  simulation_hky <- hky_nosoi(ref_genome = ref_genome, host_data = host_data)
-  simulation_hky$seq <- sapply(simulation_hky$seq, function(x) paste(x, collapse = "")) # Collapse character vectors to strings
-  
-  # Save sequences
-  simulation_hky$date.time <- simulation_hky$inf.time / 365.25 # Create a BEAST friendly time format
-  IDs <- paste(simulation_hky$hosts.ID, simulation_hky$current.in, simulation_hky$date.time, sep = "|")
-  sequences <- simulation_hky$seq
-  names(sequences) <- IDs
-  multifasta <- Biostrings::DNAStringSet(sequences)
-  Biostrings::writeXStringSet(multifasta, paste0(out_dir, "sequences.fasta"))
-  
-  # Final output
-  write.csv(simulation_hky, paste0(out_dir, "simulation_data.csv"))
-  
-  log_print("Simulation finished successfully. Final output saved as simulation_data.csv")
+  log_print("All simulations finished successfully.")
   log_close()
 }
 
@@ -418,20 +458,18 @@ args <- commandArgs(trailingOnly = TRUE)
 cat("Arguments received:", length(args), "->", paste(args, collapse = ", "), "\n")
 max_infections <- if(length(args) >= 1) as.numeric(args[1])   else 10000
 sim_length     <- if(length(args) >= 2) as.numeric(args[2])   else 365
-seed           <- if(length(args) >= 3) as.numeric(args[3])   else NULL
+run_no         <- if(length(args) >= 3) as.numeric(args[3])   else 50
 out_dir        <- if(length(args) >= 4) as.character(args[4]) else "/output/simulation/"
 
 #setwd("..")
-base_dir <- normalizePath(".")
+base_dir <- normalizePath("..")
 out_dir <- paste0(base_dir, out_dir)
 
 cat("Working directory:", getwd(), "\n")
 cat("Output directory:", out_dir, "\n")
 
-seed = 12092 # For testing
-
 run_simulation(max_infections = max_infections,
                sim_length = sim_length,
-               seed = seed,
+               run_no = run_no,
                out_dir = out_dir)
 

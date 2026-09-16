@@ -37,3 +37,9 @@ Author: Joel Pålsson
  - Added arguments and ability to run from command line
  - Added decimal year time and formatted sequence alignment headers 
  - Added tree output as nexus and newick files
+
+## 16-09-2026:
+ - Removed seed arg
+ - Added run_no arg, which is the number of iterations the simulation should run. Default 50.
+ - Added skipping logic for nosoi and HKY if nosoi simulatoin goes extinct too fast. Minimum hosts set to 50.
+ - Removed histograms from output
