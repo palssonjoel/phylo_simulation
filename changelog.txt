@@ -43,3 +43,6 @@ Author: Joel Pålsson
  - Added run_no arg, which is the number of iterations the simulation should run. Default 50.
  - Added skipping logic for nosoi and HKY if nosoi simulatoin goes extinct too fast. Minimum hosts set to 50.
  - Removed histograms from output
+ 
+ ## 23-09-2026:
+  - Updated pMove to rnorm(1, 0.01, 0.05)

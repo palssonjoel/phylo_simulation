@@ -52,5 +52,38 @@ sampling_proportions |> select(exporter, pop_prop)
 # 3. Apply create_alignment() from simulation.R
 # 4. Done! :) 
 
-random_subsample <- slice_sample(simulation_data, n=150)
-create_alignment(random_subsample, "random_subsample", "output/simulation/1")
+simulation_dirs <- list.dirs("output/simulation/")
+
+# Remove first and last elements
+simulation_dirs <- simulation_dirs[-1]  # Root folder
+simulation_dirs <- simulation_dirs[-length(simulation_dirs)] # log folder
+
+lapply(simulation_dirs, function(dir) {
+  dir.create(paste0(dir, "/subsamples"))
+})
+
+random_sampling <- function(simulation_dirs, iterations) {
+  # Create a set of random subsamples for each directory in a list.
+  # The directory must hold a simulation output, otherwise it is skipped.
+  # iterations determines how many subsamples should be created for each file.
+  
+  for(dir in simulation_dirs) {
+    data_path <- paste0(dir, "/simulation_data.csv")
+    out_path  <- paste0(dir, "/subsamples/")
+    
+    if(file.exists(data_path)){
+      data <- read.csv(data_path)
+    } else {
+      print(paste0("No simulation data found in: ", dir))
+    }
+    
+    for(n in 1:iterations) {
+      random_subsample <- slice_sample(simulation_data, n=150)
+      create_alignment(random_subsample, 
+                       paste0("random_subsample_150_no", n), 
+                       out_path)
+    }
+  }
+} 
+
+random_sampling(simulation_dirs, 3)

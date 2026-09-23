@@ -62,6 +62,7 @@ Sebastian Lequime, Paul Bastide, Simon Dellicour, Philippe Lemey & Guy Baele (20
  - Constant probability of transmission once a host is infectious
  - Transmission period is same as disease lenght, minus incubation time. In reality, virus' shed beyond this period.
  - All variables are the same for all locations
+ - Probability for a host to undergo a state transition (pMove) is equal for all countries. 
  
 # HKY substituion model
 An HKY substition model is applied to the transmission chain produced by nosoi. Transition/transversion rate differences are defined by the ratio kappa. Parts of Layan et al. HKY code has been adapted here.

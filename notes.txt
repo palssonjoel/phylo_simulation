@@ -45,7 +45,63 @@ mine.
 Tried running again, and it appears successful withot errors. It took 43 hours.
 The file is not corrupted, but the tree is too large, I should create a sampling 
 script to subsample from my simulation.  
- 
+
+## 17-09-2026
+Two issues with the simulation: 1) many die out, and 2) export-heavy countries
+such as Denmark have low cumulative cases owing to a low probability of import.
+Instead of adjusting the transition matrix to include a within-state move probability
+(i.e. increasing diagonal from 0), I think a better approach is to adjust pMove.
+
+pMove describes the probability for a host at any timepoint to undergo a transition,
+and the transition matrix then defines to where this transition occurs. Right now,
+pMove is a constant 0.1, and lowering this would lead to more within-country evolution.
+
+However, pMove should perhaps mirror trade rates. A pig in Denmark, which exports a lot
+should arguably have a higher probability of moving to another country than say a
+pig in Germany. This argues in favor of different pMove for different countries,
+which could be adjusted to export/import rates. 
+
+I tested reducing it to 0.01, and this increased cumulative cases in Denmark, 
+and reduced them in the high-import countries such as Hungary, Sweden, and Germany.
+
+After startup meeting, some considerations have come up:
+
+ - Reduce number of actual simulations, instead increasing number of subsamplings.
+ - Can setup three different sampling schemes:
+    1. Even
+    2. Uneven, mirroring what we see IRL
+    3. One based on population
+ - Ghost demes - include or not?
+ - Consider increasing starting cases to e.g. 10, with different reference genomes.
+   Could be in different countries, or all in one country. 
+ - Do I need to scale the rate of evolution to mirror that of 10-20 years? 
+   Usually, these methods are not applied at an evolutionary timespan of only one year,
+   let alone two months which I'm getting now. 
+ - Consider making pTrans density dependent
  
 ################################################################################
- 
+# Week 4
+
+## 23-09-2026
+Notes for presentation to prepare:
+Prepare slideshow:
+1.	What have I done (since February)
+  a.	Theory I’ve read on
+  b.	Methods I’ve installed and tried
+2.	What I’ve done so far on the “actual” project
+3.	The tools to be tested:
+  a.	Input needed (and what is needed to create this)
+  b.	Output
+4.	Ideally, also a CPU hour estimate
+
+Up for discussion:
+•	The numbers:
+  o	How many simulations? 10 for now
+  o	How many sampling schemes? 3 for now
+  o	How many sequences in each subsampling? 150 for now
+  o	How many times should each scheme be employed? 10?
+  o	Do we run MASCOT twice on each dataset?
+•	Issues and questions:
+  o	Time scale. Currently, simulation is in days, but these tools are typically employed to timescales of 10-20 years of evolution. How can this be handled?
+  o	Saasi and (probably) StructCoalescent both need a phylogenetic timed tree as input. What tool should we use to create this? MASCOT, or IqTree + TreeTime?
+  o	
