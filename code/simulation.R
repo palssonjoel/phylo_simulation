@@ -46,7 +46,7 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   
   # pMove is probability that one pig moves between locations. Settings to 10% for now
   p_move_func <- function(t) { 
-    return(0.1)
+    return(rnorm(1, 0.01, 0.05))
   }
   
   # nContact is not equal to R0 (number of 2nd infections) - pContact is only how
@@ -238,6 +238,21 @@ calculate_inf_duration <- function(host_table) {
   return(host_table)
 }
 
+create_alignment <- function(hky_output, filename, out_dir) {
+  # Extract sequences from the hky + nosoi output, and write to an aligned
+  # fasta file. 
+  
+  simulation_hky <- hky_output
+  simulation_dir <- out_dir
+  
+  simulation_hky$date.time <- simulation_hky$inf.time / 365.25 # Create a BEAST friendly time format
+  IDs <- paste(simulation_hky$hosts.ID, simulation_hky$current.in, simulation_hky$date.time, sep = "|")
+  sequences <- simulation_hky$seq
+  names(sequences) <- IDs
+  multifasta <- Biostrings::DNAStringSet(sequences)
+  Biostrings::writeXStringSet(multifasta, paste0(simulation_dir, "/", filename, ".fasta"))
+}
+
 # HKY ALGORITHM
 hky_nosoi <- function(ref_genome, mu = 7.6e-3, kappa = 4.5, host_data) {
   # The algorithm:
@@ -287,10 +302,6 @@ hky_nosoi <- function(ref_genome, mu = 7.6e-3, kappa = 4.5, host_data) {
   E <- eig$vectors       # matrix of eigenvectors
   eigvals <- eig$values  # vector of eigenvalues
   E_1 <- solve(E)        # inverse of E
-  
-  # Construct host_table
- # host_table <- host_data |> 
-  #  select(hosts.ID, inf.by, inf.time, out.time) 
   
   host_table <- calculate_inf_duration(host_data) # Calc. evolutionary time
   
@@ -431,12 +442,7 @@ run_simulation <- function(max_infections,
       simulation_hky$seq <- sapply(simulation_hky$seq, function(x) paste(x, collapse = "")) # Collapse character vectors to strings
       
       # Save sequences
-      simulation_hky$date.time <- simulation_hky$inf.time / 365.25 # Create a BEAST friendly time format
-      IDs <- paste(simulation_hky$hosts.ID, simulation_hky$current.in, simulation_hky$date.time, sep = "|")
-      sequences <- simulation_hky$seq
-      names(sequences) <- IDs
-      multifasta <- Biostrings::DNAStringSet(sequences)
-      Biostrings::writeXStringSet(multifasta, paste0(simulation_dir, "/sequences.fasta"))
+      create_alignment(simulation_hky, full_seqs, simulation_dir)
       
       # Final output
       write.csv(simulation_hky, paste0(simulation_dir, "/simulation_data.csv"))
@@ -449,7 +455,7 @@ run_simulation <- function(max_infections,
     }
   }
   
-  log_print("All simulations finished successfully.")
+  log_print("All simulations done.")
   log_close()
 }
 

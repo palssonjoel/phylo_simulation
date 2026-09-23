@@ -27,6 +27,7 @@
 
 library(ggplot2)
 library(dplyr)
+library(nosoi)
 
 
 simulation_dirs <- list.dirs("output/simulation/")
@@ -35,7 +36,8 @@ simulation_dirs <- list.dirs("output/simulation/")
 simulation_dirs <- simulation_dirs[-1]  # Root folder
 simulation_dirs <- simulation_dirs[-length(simulation_dirs)] # log folder
 
-# For now, work with only one, but later create a loop
+############################3
+# TESTING
 path <- simulation_dirs[1]
 
 sim <- readRDS(paste0(path, "/nosoi_sim.rds"))
@@ -50,35 +52,73 @@ sim_sum <- summary(sim)
 ggplot(cumu_table, aes(t, Count)) +
   geom_line() 
 
-ggplot(dynamics_table |> filter(state == "Netherlands"), aes(t, Count, color = state)) +
+ggplot(dynamics_table |> filter(state == "Denmark"), aes(t, Count, color = state)) +
   geom_line()
 
-
+#########################################################
 # Load all dynamics tables into one dataframe
-i <- as.integer(1)
-dynamics_all <- data.frame()
 
-for (dir in simulation_dirs) {
+generate_state_graphs <- function(simulation_dirs) {
   
-  file <- paste0(dir, "/nosoi_sim.rds")
+  host_all     <- data.frame()
+  state_all    <- data.frame()
+  dynamics_all <- data.frame()
+  cumu_all     <- data.frame()
   
-  if (file.exists(file)) {
-    sim <- readRDS(file)
+  i <- as.integer(1) 
+  
+  for (dir in simulation_dirs) {
+    sim_file <- paste0(dir, "/nosoi_sim.rds")
     
-    dynamics_table <- getDynamic(sim)
-    dynamics_table$sim_id <- toString(i)
-    
-    dynamics_all <- rbind(dynamics_all, dynamics_table)  
-  } else {
-    message(paste0("Simulation missing in ", file))
+    if (file.exists(sim_file)) {
+      sim <- readRDS(sim_file)
+      
+      # Load data tables
+      host_table     <- getTableHosts(sim)
+      state_table    <- getTableState(sim)
+      dynamics_table <- getDynamic(sim)
+      cumu_table     <- getCumulative(sim)
+      
+      # Add simulation ID
+      host_table$sim_id     <- toString(i)
+      state_table$sim_id    <- toString(i)
+      dynamics_table$sim_id <- toString(i)
+      cumu_table$sim_id     <- toString(i)
+      
+      
+      host_all     <- rbind(host_all, host_table)
+      state_all    <- rbind(state_all, state_table)  
+      dynamics_all <- rbind(dynamics_all, dynamics_table)  
+      cumu_all     <- rbind(cumu_all, cumu_table)  
+    } else {
+      message(paste0("Simulation missing in ", sim_file))
+    }
+    i <- i + 1L
   }
   
-  i <- i + 1L
+  all_data <- list(
+    host_all     = host_all,
+    state_all    = state_all,
+    dynamics_all = dynamics_all,
+    cumu_all     = cumu_all
+  )
+  
+  return(all_data)
 }
 
-dynamics_avg <- dynamics_all |> 
+test <- generate_state_graphs(simulation_dirs)
+
+dynamics_avg <- test$dynamics_all |> 
   group_by(t, state) |> 
-  summarise(Count = mean(Count, na.rm = TRUE), .groups = "drop")
+  summarise(Count = mean(Count, na.rm = TRUE),
+            sd = sd(Count, na.rm = TRUE),
+            .groups = "drop")
+
+cumu_avg <- test$cumu_all |> 
+  group_by(t) |> 
+  summarise(Count = mean(Count, na.rm = TRUE),
+            sd = sd(Count, na.rm = TRUE),
+            .groups = "drop")
 
 ggplot() +
   # Individual simulations: faded, grouped so lines don't connect across sim_id
@@ -90,4 +130,16 @@ ggplot() +
             aes(t, Count), 
             color = "firebrick", linewidth = 1) +
   facet_wrap(~state) +
+  theme_minimal()
+
+# Cumulative 
+ggplot() +
+  # Individual simulations: faded, grouped so lines don't connect across sim_id
+  geom_line(data = test$cumu_all, 
+            aes(t, Count, group = sim_id), 
+            color = "grey70", alpha = 0.4, linewidth = 0.3) +
+  # Average trajectory on top
+  geom_line(data = cumu_avg, 
+            aes(t, Count), 
+            color = "firebrick", linewidth = 1) +
   theme_minimal()
