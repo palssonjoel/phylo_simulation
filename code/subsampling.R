@@ -27,7 +27,9 @@
 # they have 50% of cases in the subsampled data.
 
 # Biased sampling is built on same approach, but proportions are instead calculated
-# based on proportion of sampling in datasets.
+# based on proportion of sampling in datasets. Also, keep in mind that surveillance 
+# can be temporal in the sense that at times, a lot more sampling occurs than at other times
+# in accordance with funding or projects. 
 
 library(dplyr)
 
@@ -78,9 +80,9 @@ random_sampling <- function(simulation_dirs, iterations) {
     }
     
     for(n in 1:iterations) {
-      random_subsample <- slice_sample(simulation_data, n=150)
+      random_subsample <- slice_sample(simulation_data, n=500)
       create_alignment(random_subsample, 
-                       paste0("random_subsample_150_no", n), 
+                       paste0("random_500_no", n), 
                        out_path)
     }
   }

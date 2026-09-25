@@ -16,6 +16,7 @@
 
 library(beautier)
 
+# NOTE: this doesn't work for MASCOT
 create_beast2_input_file(
   "output/simulation/1/random_subsample_150.fasta",
   "output/simulation/1/random_subsample_150.xml",
