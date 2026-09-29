@@ -23,7 +23,7 @@ library(seqinr)
 library(phangorn)
 library(logr)
 library(Biostrings)
-library(gridExtra)
+#library(gridExtra)
 
 run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_dir, sim_length) {
 
@@ -42,22 +42,55 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   pig_total <- sum(pop_stats$exporter_herd_size)
   pop_stats$herd_proportion <- pop_stats$exporter_herd_size / pig_total
   
+  # -------------------------------------------------------------------------
+  # Country-specific transmission scaling
+  #
+  # The movement matrix defines the long-run distribution of animals across
+  # countries (pi_stat). This is compared with the observed proportion of the
+  # total EU herd in each country (target).
+  #
+  # target / pi_stat therefore measures whether a country is under- or
+  # over-represented by the movement network relative to its herd size:
+  #   >1  = larger herd share than implied by movement
+  #   <1  = smaller herd share than implied by movement
+  #
+  # Transmission scaling is limited to approximately +/-15%.
+  # -------------------------------------------------------------------------
   
-  target <- setNames(pop_stats$herd_proportion, pop_stats$exporter)    
+  # Define target population distribution
+  target <- setNames(
+    pop_stats$herd_proportion,
+    pop_stats$exporter
+  )
   
-  stat <- function(M) { v <- Re(eigen(t(M))$vectors[,1]); setNames(v/sum(v), rownames(M)) }
+  # Stationary distribution of the animal movement network
+  stat <- function(M) {
+    v <- Re(eigen(t(M))$vectors[, 1])
+    setNames(v / sum(v), rownames(M))
+  }
+  
   pi_stat <- stat(transition_matrix)
   
-  ratio <- target / pi_stat                     # >1 = country is under-represented by trade
+  # Relative herd representation compared with movement-network representation
+  ratio <- target / pi_stat
+  
+  # Log-ratio: 0 means herd share and movement share are equal
   lr <- log(ratio)
   
-  w <- 1 + 0.15 * tanh(lr / 4)        
+  # Bounded country-specific transmission multiplier
+  w <- 1 + 0.15 * tanh(lr / 4)
+  
+  # Baseline transmission scaling and country-specific adjustment
   R_base <- 0.95
   R_local <- R_base * w
-  R_local <- round(R_local, 2)
+  
+  # Round for reproducibility/readability
+  R_local <- round(sort(R_local), 2)
   
   
-  # Set simulation functions
+  #############################################################################
+  #                               DEFINE NOSOI FUNCTIONS
+  #############################################################################
   
   # Core  set of functions for the simulation are:
   #   - pExit = Probability that host exits simulation (death, cured, etc.)
@@ -70,20 +103,10 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   #              be set to e.g. seasionality. 
   # 
   
-  # pMove is probability that one pig moves between locations. 
   # Beta distribution
   p_move_func <- function(t) {
     return(rbeta(1, shape1 = 1, shape2 = 99))
   }
-  
-  # nContact is not equal to R0 (number of 2nd infections) - pContact is only how
-  # many individuals a host encounters. This is HIGHLY dependent on farm structure
-  # age of pig, whether it's transported etc. Need to find data on this.
-  # I will infer it from pig pen sizes. According to article below, it is 12 pigs 
-  # per pen in Europe. There is likely variation to this. 
-  # However, in a pen, 12 pigs doesn't mean 12 naive hosts, so nContacts can't equal this.
-  # If it does, it causes explosive growth. I've adjusted it down. 
-  # https://ahdb.org.uk/eupig-novelty-in-enrichment-material
   
   # ASSUMPTION: For now, I will assume that it is the same for all countries.
   n_contact_func <- function(t) {
@@ -101,32 +124,15 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   t_incub_func <- function(x){pmax(0, rnorm(x, mean = 2, sd = 0.5))}
   #p_max_func <- function(x){rbeta(x, shape1=1, shape2=3)}
   
-  # Mean = 0.167
   p_max_func <- function(x) {
-    pmax(0.05, rbeta(x, shape1 = 1, shape2 = 10))
-  }
-  
-  states <- colnames(transition_matrix)
-  
-  if (!identical(sort(states), sort(names(R_local)))) {
-    stop(
-      "State mismatch!\n",
-      "Transition matrix states: ",
-      paste(sort(states), collapse = ", "), "\n",
-      "R_local states: ",
-      paste(sort(names(R_local)), collapse = ", "), "\n",
-      "Missing from R_local: ",
-      paste(setdiff(states, names(R_local)), collapse = ", "), "\n",
-      "Extra in R_local: ",
-      paste(setdiff(names(R_local), states), collapse = ", ")
-    )
-  }
-  
-  if (anyNA(R_local)) {
-    stop("R_local contains NA values.")
+    pmax(0.1, rbeta(x, shape1 = 1, shape2 = 10))
   }
   
   p_trans_func_diff <- function(t, current.in, p_max, t_incubation) {
+    # This vairation of the p_trans function produces different p_trans values
+    # for different demes, based on the difference between the distribution
+    # of animals inferred from the transition matrix, and the observed 
+    # distribution in the data.
     
     R <- NULL
     
@@ -173,22 +179,11 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
     
     return(p_max * R)
   }
-
-  
-  
-  # As per one article,  death rate due to swIAV is
-  # between 10-15%, with up to 100% morbidity. But this is over the course of an
-  # entire illness, I'll use a duration based exit, so hosts can't exit before
-  # the incubation period is done.
-  # https://pmc.ncbi.nlm.nih.gov/articles/PMC7587018/
-  
-  # Approach: zero exit probability duing incubation, then a 1/5 probability of exiting
-  # per day. 
   
   p_exit_func <- function(t, t_incubation) {
     if (t < t_incubation) { return(0) }
     else {
-      return(1/10)  # ≈ 0.20/day → mean ~5 days post-incubation illness
+      return(1/10)  # ≈ 0.10/day → mean ~10 days post-incubation illness
     }
   }
   
@@ -196,86 +191,72 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   # Epidemic dynamics histograms
   ################################################################################
   # Mainly used when setting up, but not useful for actual runs. 
-  # Remove comments to save them for each iteration.
   
   # Number of simulated values
-  n <- 10000
+  #n <- 10000
   
   # Generate values
-  t_incub <- t_incub_func(n)
-  p_max <- p_max_func(n)
-  n_contacts <- replicate(n, n_contact_func(0))
-  p_moves <- replicate(n, p_move_func(0))
+  #t_incub <- t_incub_func(n)
+  #p_max <- p_max_func(n)
+  #n_contacts <- replicate(n, n_contact_func(0))
+  #p_moves <- replicate(n, p_move_func(0))
   
   # Histograms
-  incub_plot <- ggplot(data.frame(t_incub), aes(x = t_incub)) +
-    geom_histogram(bins = 50) +
-    labs(
-      title = "Distribution of incubation time",
-      x = "Incubation time",
-      y = "Frequency"
-    ) +
-    theme_minimal()
+  #incub_plot <- ggplot(data.frame(t_incub), aes(x = t_incub)) +
+  #  geom_histogram(bins = 50) +
+  #  labs(
+  #    title = "Distribution of incubation time",
+  #    x = "Incubation time",
+  #    y = "Frequency"
+  #  ) +
+  #  theme_minimal()
   
-  p_max_plot <- ggplot(data.frame(p_max), aes(x = p_max)) +
-    geom_histogram(bins = 50) +
-    labs(
-      title = "Distribution of maximum transmission probability",
-      x = "p_max",
-      y = "Frequency"
-    ) +
-    theme_minimal()
+  #p_max_plot <- ggplot(data.frame(p_max), aes(x = p_max)) +
+  #  geom_histogram(bins = 50) +
+  #  labs(
+  #    title = "Distribution of maximum transmission probability",
+  #    x = "p_max",
+  #    y = "Frequency"
+  #  ) +
+  #  theme_minimal()
   
-  n_contacts_plot <- ggplot(data.frame(n_contacts), aes(x = n_contacts)) +
-    geom_histogram(
-      breaks = seq(-0.5, max(n_contacts) + 0.5, by = 1)
-    ) +
-    labs(
-      title = "Distribution of nContact",
-      x = "Number of contacts",
-      y = "Frequency"
-    ) +
-    theme_minimal()
+  #n_contacts_plot <- ggplot(data.frame(n_contacts), aes(x = n_contacts)) +
+  #  geom_histogram(
+  #    breaks = seq(-0.5, max(n_contacts) + 0.5, by = 1)
+  #  ) +
+  #  labs(
+  #    title = "Distribution of nContact",
+  #    x = "Number of contacts",
+  #    y = "Frequency"
+  #  ) +
+  #  theme_minimal()
   
-  movement_plot <- ggplot(data.frame(p_moves), aes(x = p_moves)) +
-    geom_histogram() +
-    labs(
-      title = "Distribution of pMove",
-      x = "Move probability",
-      y = "Frequency"
-    ) +
-    coord_cartesian(xlim = c(0, 0.1)) +
-    theme_minimal()
+  #movement_plot <- ggplot(data.frame(p_moves), aes(x = p_moves)) +
+  #  geom_histogram() +
+  #  labs(
+  #    title = "Distribution of pMove",
+  #    x = "Move probability",
+  #    y = "Frequency"
+  #  ) +
+  #  coord_cartesian(xlim = c(0, 0.1)) +
+   # theme_minimal()
   
-  combined_plot <- grid.arrange(
-    incub_plot,
-    p_max_plot,
-    n_contacts_plot,
-    movement_plot,
-    ncol = 2
-  )
+  #combined_plot <- grid.arrange(
+  #  incub_plot,
+  #  p_max_plot,
+  #  n_contacts_plot,
+  #  movement_plot,
+  #  ncol = 2
+  #)
   
-  ggsave(
-    filename = paste0(out_dir,"histograms.png"),
-    plot = combined_plot,
-    width = 10,
-    height = 8,
-    units = "in",
-    dpi = 300
-  )
-  
-  # Save plots
-  #png(file.path(out_dir, "incub_hist.png"), width = 800, height = 600)
-  #plot(incub_hist, main = "Distribution of incubation time", xlab = "Incubation time")
-  #dev.off()
-  
-  #png(file.path(out_dir, "p_max_hist.png"), width = 800, height = 600)
-  #plot(p_max_hist, main = "Distribution of maximum transmission probability", xlab = "p_max")
-  #dev.off()
-  
-  #png(file.path(out_dir, "n_contacts_hist.png"), width = 800, height = 600)
-  #plot(n_contacts_hist, main = "Distribution of nContact", xlab = "Number of contacts")
-  #dev.off()
+  #ggsave(
+  #  filename = paste0(out_dir,"histograms.png"),
+  #  plot = combined_plot,
+  #  width = 10,
+  #  height = 8,
+  #  units = "in",
+  #  dpi = 300
+  #)
   
   ################################################################################
   # Run transmission simulation
@@ -322,7 +303,7 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
                          
                          prefix.host="H",
                          print.progress=TRUE,
-                         print.step=10)
+                         print.step=100)
   time_end <- Sys.time()
   duration <- difftime(time_end, time_start, units = "mins")
   
@@ -339,7 +320,7 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
 }
 
 ################################################################################
-# HKY model
+# HKY model (NOT USED IN THIS VERSION)
 ################################################################################
 # Conceptually, to model molecular evolution, I think I only need:
 # - Who infected who
@@ -392,9 +373,6 @@ run_simulation <- function(max_infections,
   # SETUP
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
   
-  #seed = 1242 
-  #set.seed(seed) # For testing
-  
   options("logr.notes" = FALSE)
   log_open(file_name = paste0(out_dir, "simulation"))
   
@@ -406,13 +384,15 @@ run_simulation <- function(max_infections,
   successful_runs <- 0
   attempts <- 0
   
-  max_attempts <- run_no * 1000
+  max_attempts <- run_no * 100
   
+  # Run simulation until run_no of complete simulations are done, 
+  # discarding failed runs. 
   while (successful_runs < run_no && attempts < max_attempts) {
     
     attempts <- attempts + 1
     
-    seed <- sample.int(9999999, 1)
+    seed <- sample.int(999999999, 1)
     set.seed(seed)
     
     log_print(
@@ -456,7 +436,7 @@ run_simulation <- function(max_infections,
         conditionMessage(e)
       )
       
-      message(msg)
+      #message(msg)
       log_print(msg)
       
       return(NULL)
@@ -488,7 +468,7 @@ run_simulation <- function(max_infections,
         " (< ", sim_length, " days)."
       )
       
-      message(msg)
+      #message(msg)
       log_print(msg)
       
       next

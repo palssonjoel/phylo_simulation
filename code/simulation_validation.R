@@ -30,7 +30,7 @@ library(dplyr)
 library(nosoi)
 
 
-simulation_dirs <- list.dirs("output/simulation_test/")
+simulation_dirs <- list.dirs("output/simulation/")
 
 # Remove first and last elements
 simulation_dirs <- simulation_dirs[-1]  # Root folder

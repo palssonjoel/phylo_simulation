@@ -46,3 +46,17 @@ Author: Joel Pålsson
  
  ## 23-09-2026:
   - Updated pMove to rnorm(1, 0.01, 0.05)
+  
+ ## 28-09-2026:
+  - Changed create_alignment to pull out.time instead of inf.time.
+  - Reduced nContact to an average of 1 with sd of 1.
+  - changed pMove to beta distribution: rbeta(1, shape1 = 1, shape2 = 99)
+  - Reduced pMax to an average of 0.167
+  - Wrapped simulation call in while loop such that it now only successful simulations
+    count towards the run_no (with an upper limit, so it doesn't loop forever).
+ ## 29-09-2026:
+  - Created new simulation_only.R script which doesn't implement a HKY model.
+  - Made p_trans scaled in a deme specific manner based on mismatch betwween
+    herd population and proportion of animals expected to be assoiciated with a
+    country based on transition matrix.
+  

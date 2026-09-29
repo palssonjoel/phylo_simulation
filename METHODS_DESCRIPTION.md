@@ -55,6 +55,8 @@ Relevant code:
 ## Description 
 Using the transition matrix, a transmission chain is simulated using the nosoi package. This is an agent-based, stochastic transmission chain simulator developed by Lquime et al. It uses discrete space which is defined by the countries present in the transition matrix, with one initial infected individual in Denmark. 
 
+IMPORTANT: In order to avoid state/deme/country local extinction, the transmission rate is scaled based on the mismatch between herd population share and the expected share under the animal-movement network.
+
 Source:
 Sebastian Lequime, Paul Bastide, Simon Dellicour, Philippe Lemey & Guy Baele (2020) nosoi: A stochastic agent-based transmission chain simulation framework in R. Methods in Ecology and Evolution 11:1002-1007 doi:10.1111/2041-210X.13422
 

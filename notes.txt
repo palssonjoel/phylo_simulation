@@ -104,4 +104,28 @@ Up for discussion:
 •	Issues and questions:
   o	Time scale. Currently, simulation is in days, but these tools are typically employed to timescales of 10-20 years of evolution. How can this be handled?
   o	Saasi and (probably) StructCoalescent both need a phylogenetic timed tree as input. What tool should we use to create this? MASCOT, or IqTree + TreeTime?
-  o	
+
+################################################################################
+# Week 5
+
+## 28-09-2026
+I've been tweaking the simulation parameters to get it to run for longer. By reducing transmission rates and pExit, 
+I can get it to comfortably run for >1080 days if the max_hosts is large enough. Computation now becomes a problem,
+and I should consider parellelizing it such that each individual simulation is computed on separate cores. Alternatively,
+I can make each simulation a different bash job, and effectively achieve the same without changing the architecture of 
+the simulation. 
+
+## 29-09-2026:
+After a meeting with Anders and Esben, we have decided to try to make the simulation as realistic as possible, while
+still generating enough genetic diversity. I'll need to adjust the simulation to go on for longer, years preferably, 
+which means reducing spread. I can do this, and get it to run for >1000 days comfortably, but it dies out locally. 
+Now, I tried to fix this but nosoi kept complaining that: "pTrans should have a realisation for each possible state. 
+diff.pTrans is TRUE".
+
+This is a bug, or bad design, in nosoi. The sanity check does a grep to see if all states are explicitly written in the function. I had written a function which produced different p_trans for different countries based on a lookup, but because the states
+weren't exlicitly written in the function, the sanity check by FunctionSanityChecks() failed. Perhaps I should report this bug.
+
+
+
+
+
