@@ -31,6 +31,10 @@
 # can be temporal in the sense that at times, a lot more sampling occurs than at other times
 # in accordance with funding or projects. 
 
+# An idea: 
+# Sample only from the plateau, 
+# so the tree reflects endemic dynamics rather than the star-like expansion from the seed.
+
 library(dplyr)
 
 source("code/simulation.R")

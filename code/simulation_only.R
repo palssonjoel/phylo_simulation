@@ -23,6 +23,7 @@ library(seqinr)
 library(phangorn)
 library(logr)
 library(Biostrings)
+library(gridExtra)
 
 run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_dir, sim_length) {
 
@@ -31,6 +32,31 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   transition_matrix <- transition_matrix / rowSums(transition_matrix)
   
   rowSums(transition_matrix) - 1
+  
+  # Deme pig population stats for density dependence 
+  pop_stats <- read.csv("../output/trade_movement_rates_eu.csv") |> 
+    select(exporter, exporter_herd_size) |> 
+    distinct()
+  
+  # Total population and deme proportion of total
+  pig_total <- sum(pop_stats$exporter_herd_size)
+  pop_stats$herd_proportion <- pop_stats$exporter_herd_size / pig_total
+  
+  
+  target <- setNames(pop_stats$herd_proportion, pop_stats$exporter)    
+  
+  stat <- function(M) { v <- Re(eigen(t(M))$vectors[,1]); setNames(v/sum(v), rownames(M)) }
+  pi_stat <- stat(transition_matrix)
+  
+  ratio <- target / pi_stat                     # >1 = country is under-represented by trade
+  lr <- log(ratio)
+  
+  w <- 1 + 0.15 * tanh(lr / 4)        
+  R_base <- 0.95
+  R_local <- R_base * w
+  R_local <- round(R_local, 2)
+  
+  
   # Set simulation functions
   
   # Core  set of functions for the simulation are:
@@ -44,9 +70,10 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   #              be set to e.g. seasionality. 
   # 
   
-  # pMove is probability that one pig moves between locations. Settings to 10% for now
-  p_move_func <- function(t) { 
-    return(rnorm(1, 0.01, 0.05))
+  # pMove is probability that one pig moves between locations. 
+  # Beta distribution
+  p_move_func <- function(t) {
+    return(rbeta(1, shape1 = 1, shape2 = 99))
   }
   
   # nContact is not equal to R0 (number of 2nd infections) - pContact is only how
@@ -60,19 +87,93 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   
   # ASSUMPTION: For now, I will assume that it is the same for all countries.
   n_contact_func <- function(t) {
-    abs(round(rnorm(1, 2, 1)))
+    abs(round(rnorm(1, 1, 1)))
   }
   
   # pTrans depends on incubation time, which is often cited between 1-3 days
   # p_max is a constant probability of transmission
   p_trans_func <- function(t, p_max, t_incubation) {
     if(t < t_incubation){p = 0}
-    if(t > t_incubation){p = p_max}
+    if(t >= t_incubation){p = p_max}
     return(p)
   }
   
   t_incub_func <- function(x){pmax(0, rnorm(x, mean = 2, sd = 0.5))}
-  p_max_func <- function(x){rbeta(x, shape1=1, shape2=3)}
+  #p_max_func <- function(x){rbeta(x, shape1=1, shape2=3)}
+  
+  # Mean = 0.167
+  p_max_func <- function(x) {
+    pmax(0.05, rbeta(x, shape1 = 1, shape2 = 10))
+  }
+  
+  states <- colnames(transition_matrix)
+  
+  if (!identical(sort(states), sort(names(R_local)))) {
+    stop(
+      "State mismatch!\n",
+      "Transition matrix states: ",
+      paste(sort(states), collapse = ", "), "\n",
+      "R_local states: ",
+      paste(sort(names(R_local)), collapse = ", "), "\n",
+      "Missing from R_local: ",
+      paste(setdiff(states, names(R_local)), collapse = ", "), "\n",
+      "Extra in R_local: ",
+      paste(setdiff(names(R_local), states), collapse = ", ")
+    )
+  }
+  
+  if (anyNA(R_local)) {
+    stop("R_local contains NA values.")
+  }
+  
+  p_trans_func_diff <- function(t, current.in, p_max, t_incubation) {
+    
+    R <- NULL
+    
+    # Nosoi sanity checks demands that each state is explicitly written,
+    # hence this nightmare >:(
+    if (current.in == "Albania") R <- R_local[current.in]
+    if (current.in == "Austria") R <- R_local[current.in]
+    if (current.in == "Belgium") R <- R_local[current.in]
+    if (current.in == "Bulgaria") R <- R_local[current.in]
+    if (current.in == "Croatia") R <- R_local[current.in]
+    if (current.in == "Cyprus") R <- R_local[current.in]
+    if (current.in == "Czechia") R <- R_local[current.in]
+    if (current.in == "Denmark") R <- R_local[current.in]
+    if (current.in == "Estonia") R <- R_local[current.in]
+    if (current.in == "Finland") R <- R_local[current.in]
+    if (current.in == "France") R <- R_local[current.in]
+    if (current.in == "Germany") R <- R_local[current.in]
+    if (current.in == "Greece") R <- R_local[current.in]
+    if (current.in == "Hungary") R <- R_local[current.in]
+    if (current.in == "Ireland") R <- R_local[current.in]
+    if (current.in == "Italy") R <- R_local[current.in]
+    if (current.in == "Latvia") R <- R_local[current.in]
+    if (current.in == "Lithuania") R <- R_local[current.in]
+    if (current.in == "Luxembourg") R <- R_local[current.in]
+    if (current.in == "Malta") R <- R_local[current.in]
+    if (current.in == "Netherlands") R <- R_local[current.in]
+    if (current.in == "Poland") R <- R_local[current.in]
+    if (current.in == "Portugal") R <- R_local[current.in]
+    if (current.in == "Romania") R <- R_local[current.in]
+    if (current.in == "Serbia") R <- R_local[current.in]
+    if (current.in == "Slovakia") R <- R_local[current.in]
+    if (current.in == "Slovenia") R <- R_local[current.in]
+    if (current.in == "Spain") R <- R_local[current.in]
+    if (current.in == "Sweden") R <- R_local[current.in]
+    if (current.in == "Switzerland") R <- R_local[current.in]
+    
+    if (is.null(R)) {
+      stop("Unknown state: ", current.in)
+    }
+    
+    if (t < t_incubation) {
+      return(0)
+    }
+    
+    return(p_max * R)
+  }
+
   
   
   # As per one article,  death rate due to swIAV is
@@ -87,7 +188,7 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   p_exit_func <- function(t, t_incubation) {
     if (t < t_incubation) { return(0) }
     else {
-      return(1/5)  # ≈ 0.20/day → mean ~5 days post-incubation illness
+      return(1/10)  # ≈ 0.20/day → mean ~5 days post-incubation illness
     }
   }
   
@@ -98,37 +199,70 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   # Remove comments to save them for each iteration.
   
   # Number of simulated values
-  #n <- 10000
+  n <- 10000
   
   # Generate values
-  #t_incub <- t_incub_func(n)
-  #p_max <- p_max_func(n)
-  #n_contacts <- replicate(n, n_contact_func(0))
+  t_incub <- t_incub_func(n)
+  p_max <- p_max_func(n)
+  n_contacts <- replicate(n, n_contact_func(0))
+  p_moves <- replicate(n, p_move_func(0))
   
   # Histograms
- #incub_hist <- hist(
-#    t_incub,
-#    breaks = 50,
-#    main = "Distribution of incubation time",
-#    xlab = "Incubation time",
-#    ylab = "Frequency"
-#  )
+  incub_plot <- ggplot(data.frame(t_incub), aes(x = t_incub)) +
+    geom_histogram(bins = 50) +
+    labs(
+      title = "Distribution of incubation time",
+      x = "Incubation time",
+      y = "Frequency"
+    ) +
+    theme_minimal()
   
-# p_max_hist <- hist(
-#    p_max,
-#    breaks = 50,
-#    main = "Distribution of maximum transmission probability",
-#    xlab = "p_max",
-#    ylab = "Frequency"
-#  )
+  p_max_plot <- ggplot(data.frame(p_max), aes(x = p_max)) +
+    geom_histogram(bins = 50) +
+    labs(
+      title = "Distribution of maximum transmission probability",
+      x = "p_max",
+      y = "Frequency"
+    ) +
+    theme_minimal()
   
-#  n_contacts_hist <- hist(
-#    n_contacts,
-#    breaks = seq(-0.5, max(n_contacts) + 0.5, by = 1),
-#    main = "Distribution of nContact",
-#    xlab = "Number of contacts",
-#    ylab = "Frequency"
-#  )
+  n_contacts_plot <- ggplot(data.frame(n_contacts), aes(x = n_contacts)) +
+    geom_histogram(
+      breaks = seq(-0.5, max(n_contacts) + 0.5, by = 1)
+    ) +
+    labs(
+      title = "Distribution of nContact",
+      x = "Number of contacts",
+      y = "Frequency"
+    ) +
+    theme_minimal()
+  
+  movement_plot <- ggplot(data.frame(p_moves), aes(x = p_moves)) +
+    geom_histogram() +
+    labs(
+      title = "Distribution of pMove",
+      x = "Move probability",
+      y = "Frequency"
+    ) +
+    coord_cartesian(xlim = c(0, 0.1)) +
+    theme_minimal()
+  
+  combined_plot <- grid.arrange(
+    incub_plot,
+    p_max_plot,
+    n_contacts_plot,
+    movement_plot,
+    ncol = 2
+  )
+  
+  ggsave(
+    filename = paste0(out_dir,"histograms.png"),
+    plot = combined_plot,
+    width = 10,
+    height = 8,
+    units = "in",
+    dpi = 300
+  )
   
   # Save plots
   #png(file.path(out_dir, "incub_hist.png"), width = 800, height = 600)
@@ -180,10 +314,11 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
                          timeDep.nContact=FALSE,
                          diff.nContact=FALSE,
                          
-                         pTrans = p_trans_func,
+                         pTrans = p_trans_func_diff,
                          param.pTrans = list(p_max=p_max_func,t_incubation=t_incub_func),
                          timeDep.pTrans=FALSE,
-                         diff.pTrans=FALSE,
+                         diff.pTrans=TRUE,
+                         hostCount.pTrans = FALSE,
                          
                          prefix.host="H",
                          print.progress=TRUE,
@@ -200,11 +335,6 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   )
   log_print(msg)
   
-  # Get and save transmission tree
-  tree <- getTransmissionTree(simulation)
-  write.beast(tree, file.path(out_dir, "transmission_tree.nexus"))
-  #write.beast.newick(tree, file.path(out_dir, "transmission_tree.nwk"))
- 
   return(simulation)
 }
 
@@ -245,136 +375,12 @@ create_alignment <- function(hky_output, filename, out_dir) {
   simulation_hky <- hky_output
   simulation_dir <- out_dir
   
-  simulation_hky$date.time <- simulation_hky$inf.time / 365.25 # Create a BEAST friendly time format
+  simulation_hky$date.time <- simulation_hky$out.time / 365.25 # Create a BEAST friendly time format
   IDs <- paste(simulation_hky$hosts.ID, simulation_hky$current.in, simulation_hky$date.time, sep = "|")
   sequences <- simulation_hky$seq
   names(sequences) <- IDs
   multifasta <- Biostrings::DNAStringSet(sequences)
   Biostrings::writeXStringSet(multifasta, paste0(simulation_dir, "/", filename, ".fasta"))
-}
-
-# HKY ALGORITHM
-hky_nosoi <- function(ref_genome, mu = 7.6e-3, kappa = 4.5, host_data) {
-  # The algorithm:
-  # For each host (except index case), extract the sequence of who infected them.
-  # Then, apply a HKY substitution model to this sequence.
-  # HKY is a function of time, meaning that substitution rates occur with a probability
-  # over time. Here, what is relevant is the difference between when the thost was infected
-  # and when their infector was infected. 
-  
-  # Variables: 
-  # ref_genome = reference genome, that of the virus infecting first host
-  # mu = yearly substition rate, default 7.6e-3
-  # kappa = transition/transversion rate ratio, default 4.5
-  # host_data = nosoi getHostData() output
-  
-  # HKY PARAMETERS
-  bases <- c("a", "c", "g", "t")
-  mu_daily <- mu / 365.25 # HA mutation rate per day
-  baseComp <- table(ref_genome)
-  baseFreq <- as.numeric(baseComp) / length(ref_genome)
-  names(baseFreq) <- names(baseComp)
-  
-  # beta is "base rate" appied to transversions
-  # Formula explained: given these base frequencies and this kappa, 
-  # what value of beta makes the overall average substitution rate come out to exactly mu?
-  beta <- mu_daily/(2*(baseFreq['a']*baseFreq['c']+baseFreq['a']*baseFreq['t']+baseFreq['c']*baseFreq['g']+baseFreq['g']*baseFreq['t'])+
-                2*kappa*(baseFreq['a']*baseFreq['g']+baseFreq['c']*baseFreq['t']))
-  
-  # alpha is transion rate
-  alpha <- kappa * beta
-  
-  # Q matrix
-  # In HKY, mutations are dependent on whether it's a transition or transversion
-  # and how common the destination base is, hence *baseFre
-  Q <- matrix(NA, ncol = 4, nrow = 4)
-  Q[upper.tri(Q)] <- c(beta*baseFreq['c'], alpha*baseFreq['g'], 
-                       beta*baseFreq['g'], beta*baseFreq['t'], 
-                       alpha*baseFreq['t'], beta*baseFreq['t']) 
-  Q[lower.tri(Q)] <- c(beta*baseFreq['a'], alpha*baseFreq['a'], 
-                       beta*baseFreq['a'], beta*baseFreq['c'], 
-                       alpha*baseFreq['c'], beta*baseFreq['g'])
-  diag(Q) <- -apply(Q, 1, sum, na.rm = TRUE)
-  
-  # Compute the invertible matrix of Q and its eigenvalues 
-  # This is done only once to save compuational load
-  eig <- eigen(Q)
-  E <- eig$vectors       # matrix of eigenvectors
-  eigvals <- eig$values  # vector of eigenvalues
-  E_1 <- solve(E)        # inverse of E
-  
-  host_table <- calculate_inf_duration(host_data) # Calc. evolutionary time
-  
-  # Add index sequence
-  host_table$seq <- vector("list", nrow(host_table))
-  host_table$seq[[1]] <- ref_genome # Apend ref genome to first host
-  
-  # Make readable strings for log
-  base_comp_str <- paste(names(baseComp), baseComp, sep = "=", collapse = ", ")
-  base_freq_str <- paste(names(baseFreq), round(baseFreq, 4), sep = "=", collapse = ", ")
-  
-  msg <- paste0(
-    "Applying HKY substitution model\n",
-    "Timepoint: ", format(Sys.time(), "%H:%M:%S"), "\n\n",
-    "Mutation rate: ", mu, "\n",
-    "Transversion rate: ", beta, "\n",
-    "Transition rate: ", alpha, "\n",
-    "Kappa: ", kappa, "\n\n",
-    "Reference base composition: ", base_comp_str, "\n")
-  log_print(msg)
-  
-  time_start <- Sys.time()
-  
-  # Apply HKY to sequences
-  evolve <- function(host_table, E, E_1, eigvals, bases) {
-    
-    # Create a list of sequences for all hosts
-    n <- nrow(host_table)
-    seq_list <- vector("list", n)
-    names(seq_list) <- host_table$hosts.ID
-    seq_list["H-1"] <- host_table$seq[1]  # First host get reference genome
-    
-    host_nr <- order(host_table$inf.time) # Extract host # ordered by inf.time
-    host_nr <- setdiff(host_nr, 1)        # Skip first host, already done
-    
-    # Process all hosts in order of infection
-    for (i in host_nr) {
-      infector_id <- host_table$inf.by[i]
-      t <- host_table$evo.time[i]
-      
-      # %*% = matrix multiplication operator
-      P_t <- Re(E %*% diag(exp(eigvals * t)) %*% E_1)
-      dimnames(P_t) <- list(bases, bases)
-      
-      infector_seq <- seq_list[[infector_id]]
-      
-      # Apply substitution independently at each site
-      new_seq <- vapply(infector_seq,
-                        function(b) {
-                          # Sample a base with the probability of P_t
-                          sample(bases, size = 1, prob = P_t[b, ])
-                        }, character(1))
-      
-      seq_list[[host_table$hosts.ID[i]]] <- new_seq
-    }
-    
-    return(seq_list)
-  }
-  
-  sequences <- evolve(host_table, E, E_1, eigvals, bases)
-  host_table$seq <- sequences[host_table$hosts.ID]
-  
-  time_end <- Sys.time()
-  duration <- difftime(time_end, time_start, units = "mins")
-  
-  msg <- paste0(
-    "HKY substitution complete. Time elapsed: ",
-    round(as.numeric(duration), 2), " ", units(duration)
-  )
-  
-  log_print(msg)
-  
-  return(host_table)
 }
 
 run_simulation <- function(max_infections, 
@@ -397,68 +403,172 @@ run_simulation <- function(max_infections,
              row.names = 1,
              check.names = FALSE))
   
-  for(i in 1:run_no) {
+  successful_runs <- 0
+  attempts <- 0
+  
+  max_attempts <- run_no * 1000
+  
+  while (successful_runs < run_no && attempts < max_attempts) {
+    
+    attempts <- attempts + 1
     
     seed <- sample.int(9999999, 1)
     set.seed(seed)
     
-    log_print(paste0("Starting simulation no. ", i ,". Seed = ", seed))
+    log_print(
+      paste0(
+        "Attempt ", attempts,
+        " | Successful simulations: ",
+        successful_runs, "/", run_no,
+        " | Seed = ", seed
+      )
+    )
     
-    simulation_dir <- paste0(out_dir, "/", i)
-    dir.create(simulation_dir, recursive = TRUE, showWarnings = FALSE)
+    simulation_dir <- paste0(
+      out_dir, "/",
+      successful_runs + 1
+    )
     
-    # TRANSMISSION SIMULATION USING NOSOI
+    dir.create(
+      simulation_dir,
+      recursive = TRUE,
+      showWarnings = FALSE
+    )
+    
+    # --------------------------------------------------
+    # Run epidemic simulation
+    # --------------------------------------------------
+    
     trans_simulation <- tryCatch({
-      run_nosoi(transition_matrix, max_infections = max_infections, sim_length = 365, out_dir = simulation_dir)
+      
+      run_nosoi(
+        transition_matrix,
+        max_infections = max_infections,
+        sim_length = sim_length,
+        out_dir = simulation_dir
+      )
+      
     }, error = function(e) {
-      msg <- paste0("Replicate ", i, " nosoi run failed internally: ", conditionMessage(e))
+      
+      msg <- paste0(
+        "Attempt ", attempts,
+        " failed with error: ",
+        conditionMessage(e)
+      )
+      
       message(msg)
       log_print(msg)
-      log_print("=========================================================================")
       
       return(NULL)
     })
     
-    if (is.null(trans_simulation)) next  # crashed internally (e.g. epidemic too small)
-    
-    # Before running HKY, check that simulation did not go extinct
-    min_hosts <- 50
-    n_hosts <- nrow(getTableHosts(trans_simulation))
-    
-    if(n_hosts < min_hosts) {
-      msg <- paste0("Replicate ", i, " died out early (", n_hosts, " hosts) — skipping HKY step.")
-      message(msg)
-      log_print(msg)
-    } else {
-      
-      # Save full nosoi output
-      saveRDS(trans_simulation, paste0(simulation_dir, "/nosoi_sim.rds"))
-      
-      # RUN HKY SUBSTITION
-      host_data <-  getHostData(trans_simulation)
-      ref_genome <- read.fasta("../data/ref_genome.fasta", forceDNAtolower = FALSE, set.attributes = FALSE)[[1]]
-      
-      simulation_hky <- hky_nosoi(ref_genome = ref_genome, host_data = host_data)
-      simulation_hky$seq <- sapply(simulation_hky$seq, function(x) paste(x, collapse = "")) # Collapse character vectors to strings
-      
-      # Save sequences
-      create_alignment(simulation_hky, full_seqs, simulation_dir)
-      
-      # Final output
-      write.csv(simulation_hky, paste0(simulation_dir, "/simulation_data.csv"))
-      
-      # Log
-      msg <- paste0(i, " simulations out of ", run_no, " complete.")
-      message(msg)
-      log_print(msg)
-      log_print("=========================================================================")
+    if (is.null(trans_simulation)) {
+      next
     }
+    
+    # --------------------------------------------------
+    # Check whether epidemic was successful
+    # --------------------------------------------------
+    
+    host_table <- getTableHosts(trans_simulation)
+    
+    n_hosts <- nrow(host_table)
+    
+    final_time <- max(
+      host_table$out.time,
+      na.rm = TRUE
+    )
+    
+    if (final_time < sim_length) {
+      
+      msg <- paste0(
+        "Attempt ", attempts,
+        " rejected: epidemic ended at day ",
+        final_time,
+        " (< ", sim_length, " days)."
+      )
+      
+      message(msg)
+      log_print(msg)
+      
+      next
+    }
+    
+    # --------------------------------------------------
+    # Successful simulation
+    # --------------------------------------------------
+    
+    successful_runs <- successful_runs + 1
+    
+    msg <- paste0(
+      "Successful simulation ",
+      successful_runs,
+      "/", run_no,
+      " obtained after ",
+      attempts,
+      " attempts."
+    )
+    
+    message(msg)
+    log_print(msg)
+    
+    # --------------------------------------------------
+    # Save successful nosoi output
+    # --------------------------------------------------
+    
+    saveRDS(
+      trans_simulation,
+      paste0(simulation_dir, "/nosoi_sim.rds")
+    )
+    
+    # Get and save transmission tree
+    print("Getting transmission tree...")
+    tree <- getTransmissionTree(trans_simulation)
+    write.beast(tree, file.path(simulation_dir, "transmission_tree.nexus"))
+    #write.beast.newick(tree, file.path(out_dir, "transmission_tree.nwk"))
+    print("Transmission tree done! Saved as .nexus file")
+    
+    log_print(
+      paste0(
+        "Simulation ",
+        successful_runs,
+        " complete."
+      )
+    )
+    
+    log_print(
+      "========================================================================="
+    )
   }
   
-  log_print("All simulations done.")
-  log_close()
+  # --------------------------------------------------
+  # Final status
+  # --------------------------------------------------
+  
+  if (successful_runs < run_no) {
+    
+    warning(
+      "Only ",
+      successful_runs,
+      " successful simulations obtained after ",
+      attempts,
+      " attempts."
+    )
+    
+  } else {
+    
+    log_print(
+      paste0(
+        "All ",
+        run_no,
+        " successful simulations completed after ",
+        attempts,
+        " attempts."
+      )
+    )
+  }
 }
-
+  
 # Arguments (positional with defaults, no checks)
 args <- commandArgs(trailingOnly = TRUE)
 cat("Arguments received:", length(args), "->", paste(args, collapse = ", "), "\n")
@@ -478,4 +588,3 @@ run_simulation(max_infections = max_infections,
                sim_length = sim_length,
                run_no = run_no,
                out_dir = out_dir)
-
