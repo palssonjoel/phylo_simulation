@@ -125,7 +125,7 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   #p_max_func <- function(x){rbeta(x, shape1=1, shape2=3)}
   
   p_max_func <- function(x) {
-    pmax(0.1, rbeta(x, shape1 = 1, shape2 = 10))
+    pmax(0.01, rbeta(x, shape1 = 1, shape2 = 10))
   }
   
   p_trans_func_diff <- function(t, current.in, p_max, t_incubation) {
@@ -193,11 +193,11 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   # Mainly used when setting up, but not useful for actual runs. 
   
   # Number of simulated values
-  #n <- 10000
+  n <- 10000
   
   # Generate values
   #t_incub <- t_incub_func(n)
-  #p_max <- p_max_func(n)
+  p_max <- p_max_func(n)
   #n_contacts <- replicate(n, n_contact_func(0))
   #p_moves <- replicate(n, p_move_func(0))
   
@@ -211,14 +211,14 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   #  ) +
   #  theme_minimal()
   
-  #p_max_plot <- ggplot(data.frame(p_max), aes(x = p_max)) +
-  #  geom_histogram(bins = 50) +
-  #  labs(
-  #    title = "Distribution of maximum transmission probability",
-  #    x = "p_max",
-  #    y = "Frequency"
-  #  ) +
-  #  theme_minimal()
+  p_max_plot <- ggplot(data.frame(p_max), aes(x = p_max)) +
+    geom_histogram(bins = 50) +
+    labs(
+      title = "Distribution of maximum transmission probability",
+      x = "p_max",
+      y = "Frequency"
+    ) +
+    theme_minimal()
   
   #n_contacts_plot <- ggplot(data.frame(n_contacts), aes(x = n_contacts)) +
   #  geom_histogram(
@@ -383,7 +383,7 @@ run_simulation <- function(max_infections,
   successful_runs <- 0
   attempts <- 0
   
-  max_attempts <- run_no * 10
+  max_attempts <- run_no * 100
   
   # Run simulation until run_no of complete simulations are done, 
   # discarding failed runs. 
@@ -450,29 +450,30 @@ run_simulation <- function(max_infections,
     # --------------------------------------------------
     
     host_table <- getTableHosts(trans_simulation)
-    
     n_hosts <- nrow(host_table)
+    final_time <- max(host_table$out.time, na.rm = TRUE)
     
-    final_time <- max(
-      host_table$out.time,
-      na.rm = TRUE
-    )
-    
+    # Warn if the simulation reaches the host limit, but do not reject it
     if (n_hosts >= max_infections) {
-      msg <- paste0("Attempt ", attempts,
-                    " hit max host threshold at day ",
-                    final_time, ".")
-    } else if  (final_time < sim_length) {
+      msg <- paste0(
+        "Attempt ", attempts,
+        " reached max host threshold (", max_infections,
+        ") at day ", final_time, "."
+      )
+      log_print(msg)
+    }
+    
+    # Accept simulations that reach at least 90% of the requested time
+    min_acceptable_time <- 0.80 * sim_length
+    if (final_time < min_acceptable_time) {
       msg <- paste0(
         "Attempt ", attempts,
         " rejected: epidemic ended at day ",
-        final_time,
-        " (< ", sim_length, " days)."
+        round(final_time, 1),
+        " (< 90% of ", sim_length, " days = ",
+        round(min_acceptable_time, 1), " days)."
       )
-      
-      #message(msg)
       log_print(msg)
-      
       next
     }
     
@@ -504,12 +505,12 @@ run_simulation <- function(max_infections,
     )
     
     # Get and save transmission tree
-    start_time <- sys.time()
+    start_time <- Sys.time()
     print("Getting transmission tree...")
     tree <- getTransmissionTree(trans_simulation)
     write.beast(tree, file.path(simulation_dir, "transmission_tree.nexus"))
     #write.beast.newick(tree, file.path(out_dir, "transmission_tree.nwk"))
-    end_time <-  sys.time()
+    end_time <-  Sys.time()
     print("Transmission tree done! Saved as .nexus file")
     duration <- difftime(end_time, start_time, units = "mins")
     print(paste0("Time take: ", duration))
