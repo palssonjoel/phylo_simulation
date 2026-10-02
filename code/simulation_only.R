@@ -368,7 +368,6 @@ run_simulation <- function(max_infections,
                            sim_length,
                            run_no, 
                            out_dir) {
-  # This runs both the transmission chain and HKY simulation
   
   # SETUP
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
@@ -505,11 +504,15 @@ run_simulation <- function(max_infections,
     )
     
     # Get and save transmission tree
+    start_time <- sys.time()
     print("Getting transmission tree...")
     tree <- getTransmissionTree(trans_simulation)
     write.beast(tree, file.path(simulation_dir, "transmission_tree.nexus"))
     #write.beast.newick(tree, file.path(out_dir, "transmission_tree.nwk"))
+    end_time <-  sys.time()
     print("Transmission tree done! Saved as .nexus file")
+    duration <- difftime(end_time, start_time, units = "mins")
+    print(paste0("Time take: ", duration))
     
     log_print(
       paste0(
