@@ -384,7 +384,7 @@ run_simulation <- function(max_infections,
   successful_runs <- 0
   attempts <- 0
   
-  max_attempts <- run_no * 100
+  max_attempts <- run_no * 10
   
   # Run simulation until run_no of complete simulations are done, 
   # discarding failed runs. 
@@ -459,8 +459,11 @@ run_simulation <- function(max_infections,
       na.rm = TRUE
     )
     
-    if (final_time < sim_length) {
-      
+    if (n_hosts >= max_infections) {
+      msg <- paste0("Attempt ", attempts,
+                    " hit max host threshold at day ",
+                    final_time, ".")
+    } else if  (final_time < sim_length) {
       msg <- paste0(
         "Attempt ", attempts,
         " rejected: epidemic ended at day ",

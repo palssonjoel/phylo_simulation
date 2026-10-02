@@ -10,106 +10,309 @@ R Version: 4.4.0 (2024-04-24 ucrt)
 Machine: C2201598 x86-64
 Operating System: Windows 10 x64 build 26200
 Base Packages: stats4 stats graphics grDevices utils datasets methods base
-Other Packages: gridExtra_2.3 Biostrings_2.74.1 GenomeInfoDb_1.42.3
-XVector_0.46.0 IRanges_2.40.1 S4Vectors_0.44.0 BiocGenerics_0.52.0 logr_1.3.9
-common_1.1.5 phangorn_2.12.1 ape_5.8-1 seqinr_4.2-36 treeio_1.30.0
-ggplot2_4.0.3 ggtree_3.14.0 dplyr_1.2.1 nosoi_1.1.2 data.table_1.18.4
-Log Start Time: 2026-09-29 21:17:54.638217
+Other Packages: Biostrings_2.74.1 GenomeInfoDb_1.42.3 XVector_0.46.0
+IRanges_2.40.1 S4Vectors_0.44.0 BiocGenerics_0.52.0 logr_1.3.9 common_1.1.5
+phangorn_2.12.1 ape_5.8-1 seqinr_4.2-36 treeio_1.30.0 ggplot2_4.0.3
+ggtree_3.14.0 dplyr_1.2.1 nosoi_1.1.2 data.table_1.18.4
+Log Start Time: 2026-10-02 11:23:01.07386
 =========================================================================
 
-Attempt 1 | Successful simulations: 0/1 | Seed = 996188651
+Attempt 1 | Successful simulations: 0/1 | Seed = 669675479
 
-Starting transmission simulation Timepoint: 21:17:56 Max infected: 1e+07 Time
-limit: 7305
+Starting transmission simulation Timepoint: 11:23:01 Max infected: 10000 Time
+limit: 1096
+
+Transmission simulation complete. Time elapsed: 0.01 mins
+
+Attempt 1 rejected: epidemic ended at day 44 (< 1096 days).
+
+Attempt 2 | Successful simulations: 0/1 | Seed = 912274393
+
+Starting transmission simulation Timepoint: 11:23:01 Max infected: 10000 Time
+limit: 1096
 
 Transmission simulation complete. Time elapsed: 0 mins
 
-Attempt 1 rejected: epidemic ended at day 2 (< 7305 days).
+Attempt 2 rejected: epidemic ended at day 4 (< 1096 days).
 
-Attempt 2 | Successful simulations: 0/1 | Seed = 848991778
+Attempt 3 | Successful simulations: 0/1 | Seed = 580292538
 
-Starting transmission simulation Timepoint: 21:17:57 Max infected: 1e+07 Time
-limit: 7305
+Starting transmission simulation Timepoint: 11:23:01 Max infected: 10000 Time
+limit: 1096
 
 Transmission simulation complete. Time elapsed: 0 mins
 
-Attempt 2 rejected: epidemic ended at day 5 (< 7305 days).
+Attempt 3 rejected: epidemic ended at day 5 (< 1096 days).
 
-Attempt 3 | Successful simulations: 0/1 | Seed = 87323490
+Attempt 4 | Successful simulations: 0/1 | Seed = 196556700
 
-Starting transmission simulation Timepoint: 21:17:58 Max infected: 1e+07 Time
-limit: 7305
+Starting transmission simulation Timepoint: 11:23:01 Max infected: 10000 Time
+limit: 1096
+
+Transmission simulation complete. Time elapsed: 0 mins
+
+Attempt 4 rejected: epidemic ended at day 3 (< 1096 days).
+
+Attempt 5 | Successful simulations: 0/1 | Seed = 842743415
+
+Starting transmission simulation Timepoint: 11:23:01 Max infected: 10000 Time
+limit: 1096
+
+Transmission simulation complete. Time elapsed: 0.19 mins
+
+Attempt 5 rejected: epidemic ended at day 325 (< 1096 days).
+
+Attempt 6 | Successful simulations: 0/1 | Seed = 757914754
+
+Starting transmission simulation Timepoint: 11:23:13 Max infected: 10000 Time
+limit: 1096
+
+Transmission simulation complete. Time elapsed: 0 mins
+
+Attempt 6 rejected: epidemic ended at day 2 (< 1096 days).
+
+Attempt 7 | Successful simulations: 0/1 | Seed = 868139337
+
+Starting transmission simulation Timepoint: 11:23:13 Max infected: 10000 Time
+limit: 1096
+
+Transmission simulation complete. Time elapsed: 0 mins
+
+Attempt 7 rejected: epidemic ended at day 18 (< 1096 days).
+
+Attempt 8 | Successful simulations: 0/1 | Seed = 305698
+
+Starting transmission simulation Timepoint: 11:23:13 Max infected: 10000 Time
+limit: 1096
+
+Transmission simulation complete. Time elapsed: 0 mins
+
+Attempt 8 rejected: epidemic ended at day 4 (< 1096 days).
+
+Attempt 9 | Successful simulations: 0/1 | Seed = 278761526
+
+Starting transmission simulation Timepoint: 11:23:13 Max infected: 10000 Time
+limit: 1096
+
+Transmission simulation complete. Time elapsed: 0.01 mins
+
+Attempt 9 rejected: epidemic ended at day 80 (< 1096 days).
+
+Attempt 10 | Successful simulations: 0/1 | Seed = 290962457
+
+Starting transmission simulation Timepoint: 11:23:13 Max infected: 10000 Time
+limit: 1096
 
 RStudio not running 
 RStudio not running
 Traceback: 
 Traceback:
- [1] "21: lapply(dots, methods:::.class1)"                                                       
- [2] "20: lapply(dots, methods:::.class1)"                                                       
- [3] "19: unlist(lapply(dots, methods:::.class1))"                                               
- [4] "18: unique(unlist(lapply(dots, methods:::.class1)))"                                       
- [5] "17: standardGeneric(\"pmax\")"                                                             
- [6] "16: pmax(0, rnorm(x, mean = 2, sd = 0.5))"                                                 
- [7] "15: x(1)"                                                                                  
- [8] "14: FUN(X[[i]], ...)"                                                                      
- [9] "13: lapply(X = X, FUN = FUN, ...)"                                                         
-[10] "12: sapply(ParamHost, function(x) x(1))"                                                   
-[11] "11: as.list(sapply(ParamHost, function(x) x(1)))"                                          
-[12] "10: newLine(hosts.ID, as.character(df.meetTransmit[[i, \"active.hosts\"]]), "              
-[13] "        infected.in = getPositionInfected(res, df.meetTransmit, i), "                      
-[14] "        pres.time, ParamHost, current.environmental.value = df.meetTransmit[[i, "          
-[15] "            \"current.env.value\"]], current.cell.number.raster = df.meetTransmit[[i, "    
-[16] "            \"current.cell.raster\"]], current.count.A = df.meetTransmit[[i, "             
-[17] "            \"host.count.A\"]], current.count.B = df.meetTransmit[[i, "                    
-[18] "            \"host.count.B\"]])"                                                           
-[19] "9: writeInfected(df.meetTransmit, res$host.info.A, pres.time, ParamHost)"                  
-[20] "8: singleDiscrete(...)"                                                                    
-[21] "7: nosoiSim(type = \"single\", popStructure = \"discrete\", length.sim = sim_length, "     
-[22] "       max.infected = max_infections, init.individuals = 1, init.structure = \"Denmark\", "
-[23] "       structure.matrix = transition_matrix, pExit = p_exit_func, "                        
-[24] "       param.pExit = list(t_incubation = t_incub_func), timeDep.pExit = FALSE, "           
-[25] "       diff.pExit = FALSE, pMove = p_move_func, param.pMove = NA, "                        
-[26] "       timeDep.pMove = FALSE, diff.pMove = FALSE, nContact = n_contact_func, "             
-[27] "       param.nContact = NA, timeDep.nContact = FALSE, diff.nContact = FALSE, "             
-[28] "       pTrans = p_trans_func_diff, param.pTrans = list(p_max = p_max_func, "               
-[29] "           t_incubation = t_incub_func), timeDep.pTrans = FALSE, "                         
-[30] "       diff.pTrans = TRUE, hostCount.pTrans = FALSE, prefix.host = \"H\", "                
-[31] "       print.progress = TRUE, print.step = 100)"                                           
-[32] "6: run_nosoi(transition_matrix, max_infections = max_infections, "                         
-[33] "       sim_length = sim_length, out_dir = simulation_dir)"                                 
-[34] "5: doTryCatch(return(expr), name, parentenv, handler)"                                     
-[35] "4: tryCatchOne(expr, names, parentenv, handlers[[1L]])"                                    
-[36] "3: tryCatchList(expr, classes, parentenv, handlers)"                                       
-[37] "2: tryCatch({"                                                                             
-[38] "       run_nosoi(transition_matrix, max_infections = max_infections, "                     
-[39] "           sim_length = sim_length, out_dir = simulation_dir)"                             
-[40] "   }, error = function(e) {"                                                               
-[41] "       msg <- paste0(\"Attempt \", attempts, \" failed with error: \", "                   
-[42] "           conditionMessage(e))"                                                           
-[43] "       log_print(msg)"                                                                     
-[44] "       return(NULL)"                                                                       
-[45] "   })"                                                                                     
-[46] "1: run_simulation(max_infections = max_infections, sim_length = sim_length, "              
-[47] "       run_no = run_no, out_dir = out_dir)"                                                
-21: lapply(dots, methods:::.class1)
-20: lapply(dots, methods:::.class1)
-19: unlist(lapply(dots, methods:::.class1))
-18: unique(unlist(lapply(dots, methods:::.class1)))
-17: standardGeneric("pmax")
-16: pmax(0, rnorm(x, mean = 2, sd = 0.5))
-15: x(1)
-14: FUN(X[[i]], ...)
-13: lapply(X = X, FUN = FUN, ...)
-12: sapply(ParamHost, function(x) x(1))
-11: as.list(sapply(ParamHost, function(x) x(1)))
-10: newLine(hosts.ID, as.character(df.meetTransmit[[i, "active.hosts"]]), 
-        infected.in = getPositionInfected(res, df.meetTransmit, i), 
-        pres.time, ParamHost, current.environmental.value = df.meetTransmit[[i, 
-            "current.env.value"]], current.cell.number.raster = df.meetTransmit[[i, 
-            "current.cell.raster"]], current.count.A = df.meetTransmit[[i, 
-            "host.count.A"]], current.count.B = df.meetTransmit[[i, 
-            "host.count.B"]])
-9: writeInfected(df.meetTransmit, res$host.info.A, pres.time, ParamHost)
+  [1] "17: (function (t, current.in, p_max, t_incubation) "                                        
+  [2] "    {"                                                                                      
+  [3] "        R <- NULL"                                                                          
+  [4] "        if (current.in == \"Albania\") "                                                    
+  [5] "            R <- R_local[current.in]"                                                       
+  [6] "        if (current.in == \"Austria\") "                                                    
+  [7] "            R <- R_local[current.in]"                                                       
+  [8] "        if (current.in == \"Belgium\") "                                                    
+  [9] "            R <- R_local[current.in]"                                                       
+ [10] "        if (current.in == \"Bulgaria\") "                                                   
+ [11] "            R <- R_local[current.in]"                                                       
+ [12] "        if (current.in == \"Croatia\") "                                                    
+ [13] "            R <- R_local[current.in]"                                                       
+ [14] "        if (current.in == \"Cyprus\") "                                                     
+ [15] "            R <- R_local[current.in]"                                                       
+ [16] "        if (current.in == \"Czechia\") "                                                    
+ [17] "            R <- R_local[current.in]"                                                       
+ [18] "        if (current.in == \"Denmark\") "                                                    
+ [19] "            R <- R_local[current.in]"                                                       
+ [20] "        if (current.in == \"Estonia\") "                                                    
+ [21] "            R <- R_local[current.in]"                                                       
+ [22] "        if (current.in == \"Finland\") "                                                    
+ [23] "            R <- R_local[current.in]"                                                       
+ [24] "        if (current.in == \"France\") "                                                     
+ [25] "            R <- R_local[current.in]"                                                       
+ [26] "        if (current.in == \"Germany\") "                                                    
+ [27] "            R <- R_local[current.in]"                                                       
+ [28] "        if (current.in == \"Greece\") "                                                     
+ [29] "            R <- R_local[current.in]"                                                       
+ [30] "        if (current.in == \"Hungary\") "                                                    
+ [31] "            R <- R_local[current.in]"                                                       
+ [32] "        if (current.in == \"Ireland\") "                                                    
+ [33] "            R <- R_local[current.in]"                                                       
+ [34] "        if (current.in == \"Italy\") "                                                      
+ [35] "            R <- R_local[current.in]"                                                       
+ [36] "        if (current.in == \"Latvia\") "                                                     
+ [37] "            R <- R_local[current.in]"                                                       
+ [38] "        if (current.in == \"Lithuania\") "                                                  
+ [39] "            R <- R_local[current.in]"                                                       
+ [40] "        if (current.in == \"Luxembourg\") "                                                 
+ [41] "            R <- R_local[current.in]"                                                       
+ [42] "        if (current.in == \"Malta\") "                                                      
+ [43] "            R <- R_local[current.in]"                                                       
+ [44] "        if (current.in == \"Netherlands\") "                                                
+ [45] "            R <- R_local[current.in]"                                                       
+ [46] "        if (current.in == \"Poland\") "                                                     
+ [47] "            R <- R_local[current.in]"                                                       
+ [48] "        if (current.in == \"Portugal\") "                                                   
+ [49] "            R <- R_local[current.in]"                                                       
+ [50] "        if (current.in == \"Romania\") "                                                    
+ [51] "            R <- R_local[current.in]"                                                       
+ [52] "        if (current.in == \"Serbia\") "                                                     
+ [53] "            R <- R_local[current.in]"                                                       
+ [54] "        if (current.in == \"Slovakia\") "                                                   
+ [55] "            R <- R_local[current.in]"                                                       
+ [56] "        if (current.in == \"Slovenia\") "                                                   
+ [57] "            R <- R_local[current.in]"                                                       
+ [58] "        if (current.in == \"Spain\") "                                                      
+ [59] "            R <- R_local[current.in]"                                                       
+ [60] "        if (current.in == \"Sweden\") "                                                     
+ [61] "            R <- R_local[current.in]"                                                       
+ [62] "        if (current.in == \"Switzerland\") "                                                
+ [63] "            R <- R_local[current.in]"                                                       
+ [64] "        if (is.null(R)) {"                                                                  
+ [65] "            stop(\"Unknown state: \", current.in)"                                          
+ [66] "        }"                                                                                  
+ [67] "        if (t < t_incubation) {"                                                            
+ [68] "            return(0)"                                                                      
+ [69] "        }"                                                                                  
+ [70] "        return(p_max * R)"                                                                  
+ [71] "    })(t = 9L, current.in = \"Poland\", p_max = 0.275051111523576, "                        
+ [72] "        t_incubation = 1.18955932714837)"                                                   
+ [73] "16: do.call(pFunc, c(list(t = t), x))"                                                      
+ [74] "15: (function (prestime, inf.time, ...) "                                                   
+ [75] "    {"                                                                                      
+ [76] "        t = prestime - inf.time"                                                            
+ [77] "        x <- list(...)"                                                                     
+ [78] "        do.call(pFunc, c(list(t = t), x))"                                                  
+ [79] "    })(prestime = 98L, inf.time = 89L, current.in = \"Poland\", p_max = 0.275051111523576, "
+ [80] "        t_incubation = 1.18955932714837)"                                                   
+ [81] "14: do.call(pFunc_eval, c(list(prestime = prestime), parameters))"                          
+ [82] "13: pasedFunction$vect(prestime = pres.time, .SD)"                                          
+ [83] "12: `[.data.table`(res$table.hosts, active.hosts, pasedFunction$vect(prestime = pres.time, "
+ [84] "        .SD), by = \"hosts.ID\", .SDcols = pasedFunction$vectArgs)"                         
+ [85] "11: res$table.hosts[active.hosts, pasedFunction$vect(prestime = pres.time, "                
+ [86] "        .SD), by = \"hosts.ID\", .SDcols = pasedFunction$vectArgs]"                         
+ [87] "10: applyFunctionToHosts(res, pres.time, pTransParsed, active.hosts)"                       
+ [88] "9: meetTransmit(res$host.info.A, pres.time, positions = c(\"current.in\", "                 
+ [89] "       \"host.count.A\"), nContactParsed, pTransParsed)"                                    
+ [90] "8: singleDiscrete(...)"                                                                     
+ [91] "7: nosoiSim(type = \"single\", popStructure = \"discrete\", length.sim = sim_length, "      
+ [92] "       max.infected = max_infections, init.individuals = 1, init.structure = \"Denmark\", " 
+ [93] "       structure.matrix = transition_matrix, pExit = p_exit_func, "                         
+ [94] "       param.pExit = list(t_incubation = t_incub_func), timeDep.pExit = FALSE, "            
+ [95] "       diff.pExit = FALSE, pMove = p_move_func, param.pMove = NA, "                         
+ [96] "       timeDep.pMove = FALSE, diff.pMove = FALSE, nContact = n_contact_func, "              
+ [97] "       param.nContact = NA, timeDep.nContact = FALSE, diff.nContact = FALSE, "              
+ [98] "       pTrans = p_trans_func_diff, param.pTrans = list(p_max = p_max_func, "                
+ [99] "           t_incubation = t_incub_func), timeDep.pTrans = FALSE, "                          
+[100] "       diff.pTrans = TRUE, hostCount.pTrans = FALSE, prefix.host = \"H\", "                 
+[101] "       print.progress = TRUE, print.step = 100)"                                            
+[102] "6: run_nosoi(transition_matrix, max_infections = max_infections, "                          
+[103] "       sim_length = sim_length, out_dir = simulation_dir)"                                  
+[104] "5: doTryCatch(return(expr), name, parentenv, handler)"                                      
+[105] "4: tryCatchOne(expr, names, parentenv, handlers[[1L]])"                                     
+[106] "3: tryCatchList(expr, classes, parentenv, handlers)"                                        
+[107] "2: tryCatch({"                                                                              
+[108] "       run_nosoi(transition_matrix, max_infections = max_infections, "                      
+[109] "           sim_length = sim_length, out_dir = simulation_dir)"                              
+[110] "   }, error = function(e) {"                                                                
+[111] "       msg <- paste0(\"Attempt \", attempts, \" failed with error: \", "                    
+[112] "           conditionMessage(e))"                                                            
+[113] "       log_print(msg)"                                                                      
+[114] "       return(NULL)"                                                                        
+[115] "   })"                                                                                      
+[116] "1: run_simulation(max_infections = max_infections, sim_length = sim_length, "               
+[117] "       run_no = run_no, out_dir = out_dir)"                                                 
+17: (function (t, current.in, p_max, t_incubation) 
+    {
+        R <- NULL
+        if (current.in == "Albania") 
+            R <- R_local[current.in]
+        if (current.in == "Austria") 
+            R <- R_local[current.in]
+        if (current.in == "Belgium") 
+            R <- R_local[current.in]
+        if (current.in == "Bulgaria") 
+            R <- R_local[current.in]
+        if (current.in == "Croatia") 
+            R <- R_local[current.in]
+        if (current.in == "Cyprus") 
+            R <- R_local[current.in]
+        if (current.in == "Czechia") 
+            R <- R_local[current.in]
+        if (current.in == "Denmark") 
+            R <- R_local[current.in]
+        if (current.in == "Estonia") 
+            R <- R_local[current.in]
+        if (current.in == "Finland") 
+            R <- R_local[current.in]
+        if (current.in == "France") 
+            R <- R_local[current.in]
+        if (current.in == "Germany") 
+            R <- R_local[current.in]
+        if (current.in == "Greece") 
+            R <- R_local[current.in]
+        if (current.in == "Hungary") 
+            R <- R_local[current.in]
+        if (current.in == "Ireland") 
+            R <- R_local[current.in]
+        if (current.in == "Italy") 
+            R <- R_local[current.in]
+        if (current.in == "Latvia") 
+            R <- R_local[current.in]
+        if (current.in == "Lithuania") 
+            R <- R_local[current.in]
+        if (current.in == "Luxembourg") 
+            R <- R_local[current.in]
+        if (current.in == "Malta") 
+            R <- R_local[current.in]
+        if (current.in == "Netherlands") 
+            R <- R_local[current.in]
+        if (current.in == "Poland") 
+            R <- R_local[current.in]
+        if (current.in == "Portugal") 
+            R <- R_local[current.in]
+        if (current.in == "Romania") 
+            R <- R_local[current.in]
+        if (current.in == "Serbia") 
+            R <- R_local[current.in]
+        if (current.in == "Slovakia") 
+            R <- R_local[current.in]
+        if (current.in == "Slovenia") 
+            R <- R_local[current.in]
+        if (current.in == "Spain") 
+            R <- R_local[current.in]
+        if (current.in == "Sweden") 
+            R <- R_local[current.in]
+        if (current.in == "Switzerland") 
+            R <- R_local[current.in]
+        if (is.null(R)) {
+            stop("Unknown state: ", current.in)
+        }
+        if (t < t_incubation) {
+            return(0)
+        }
+        return(p_max * R)
+    })(t = 9L, current.in = "Poland", p_max = 0.275051111523576, 
+        t_incubation = 1.18955932714837)
+16: do.call(pFunc, c(list(t = t), x))
+15: (function (prestime, inf.time, ...) 
+    {
+        t = prestime - inf.time
+        x <- list(...)
+        do.call(pFunc, c(list(t = t), x))
+    })(prestime = 98L, inf.time = 89L, current.in = "Poland", p_max = 0.275051111523576, 
+        t_incubation = 1.18955932714837)
+14: do.call(pFunc_eval, c(list(prestime = prestime), parameters))
+13: pasedFunction$vect(prestime = pres.time, .SD)
+12: `[.data.table`(res$table.hosts, active.hosts, pasedFunction$vect(prestime = pres.time, 
+        .SD), by = "hosts.ID", .SDcols = pasedFunction$vectArgs)
+11: res$table.hosts[active.hosts, pasedFunction$vect(prestime = pres.time, 
+        .SD), by = "hosts.ID", .SDcols = pasedFunction$vectArgs]
+10: applyFunctionToHosts(res, pres.time, pTransParsed, active.hosts)
+9: meetTransmit(res$host.info.A, pres.time, positions = c("current.in", 
+       "host.count.A"), nContactParsed, pTransParsed)
 8: singleDiscrete(...)
 7: nosoiSim(type = "single", popStructure = "discrete", length.sim = sim_length, 
        max.infected = max_infections, init.individuals = 1, init.structure = "Denmark", 
@@ -140,6 +343,6 @@ Traceback:
        run_no = run_no, out_dir = out_dir)
 
 =========================================================================
-Log End Time: 2026-09-29 22:14:03.478169
-Log Elapsed Time: 0 00:56:08
+Log End Time: 2026-10-02 11:23:16.316364
+Log Elapsed Time: 0 00:00:15
 =========================================================================
