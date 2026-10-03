@@ -125,7 +125,7 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   #p_max_func <- function(x){rbeta(x, shape1=1, shape2=3)}
   
   p_max_func <- function(x) {
-    pmax(0.01, rbeta(x, shape1 = 1, shape2 = 10))
+    pmax(0, rbeta(x, shape1 = 3, shape2 = 10))
   }
   
   p_trans_func_diff <- function(t, current.in, p_max, t_incubation) {
@@ -180,10 +180,118 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
     return(p_max * R)
   }
   
+  p_trans_density <- function(t, current.in, host.count, p_max, t_incubation) {
+    
+    R <- NULL
+    
+    # Nosoi sanity checks demands that each state is explicitly written,
+    # hence this nightmare >:(
+    if (current.in == "Albania") R <- R_local[current.in]
+    if (current.in == "Austria") R <- R_local[current.in]
+    if (current.in == "Belgium") R <- R_local[current.in]
+    if (current.in == "Bulgaria") R <- R_local[current.in]
+    if (current.in == "Croatia") R <- R_local[current.in]
+    if (current.in == "Cyprus") R <- R_local[current.in]
+    if (current.in == "Czechia") R <- R_local[current.in]
+    if (current.in == "Denmark") R <- R_local[current.in]
+    if (current.in == "Estonia") R <- R_local[current.in]
+    if (current.in == "Finland") R <- R_local[current.in]
+    if (current.in == "France") R <- R_local[current.in]
+    if (current.in == "Germany") R <- R_local[current.in]
+    if (current.in == "Greece") R <- R_local[current.in]
+    if (current.in == "Hungary") R <- R_local[current.in]
+    if (current.in == "Ireland") R <- R_local[current.in]
+    if (current.in == "Italy") R <- R_local[current.in]
+    if (current.in == "Latvia") R <- R_local[current.in]
+    if (current.in == "Lithuania") R <- R_local[current.in]
+    if (current.in == "Luxembourg") R <- R_local[current.in]
+    if (current.in == "Malta") R <- R_local[current.in]
+    if (current.in == "Netherlands") R <- R_local[current.in]
+    if (current.in == "Poland") R <- R_local[current.in]
+    if (current.in == "Portugal") R <- R_local[current.in]
+    if (current.in == "Romania") R <- R_local[current.in]
+    if (current.in == "Serbia") R <- R_local[current.in]
+    if (current.in == "Slovakia") R <- R_local[current.in]
+    if (current.in == "Slovenia") R <- R_local[current.in]
+    if (current.in == "Spain") R <- R_local[current.in]
+    if (current.in == "Sweden") R <- R_local[current.in]
+    if (current.in == "Switzerland") R <- R_local[current.in]
+    
+    if (t < t_incubation) {
+      return(0)
+    }
+    
+    # Introduce a density dependent suppression factor
+    K <- 1000   # Scale at which suppression starts
+    h <- 1      # Sharpness of suppression
+    
+    density_factor <- 1 / (1 + (host.count / K)^h)
+    
+    p_trans <- p_max * R * density_factor
+    
+    return(p_trans)
+  }
+  
+  p_trans_density <- function(t, current.in, host.count, p_max, t_incubation) {
+    # This adds a density dependent suppression to p_trans_func_diff(),
+    # which reduces the number of active hosts in each country after 
+    # increasing above the cutoff point K. This is introduced to 
+    # allow for endemic spread, without the epidemic scaling to unsustainable
+    # levels when expanded to run over 10-20 years.
+    
+    if (current.in == "Albania") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Austria") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Belgium") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Bulgaria") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Croatia") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Cyprus") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Czechia") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Denmark") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Estonia") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Finland") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "France") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Germany") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Greece") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Hungary") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Ireland") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Italy") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Latvia") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Lithuania") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Luxembourg") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Malta") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Netherlands")pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Poland") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Portugal") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Romania") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Serbia") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Slovakia") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Slovenia") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Spain") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Sweden") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    if (current.in == "Switzerland") pop <- pop_stats$exporter_herd_size[pop_stats$exporter==current.in]
+    
+    if (t < t_incubation) {
+      return(0)
+    }
+    
+    # Density dependent suppression
+    h <- 2   # sharpess of suppression. 1 = gradual, 2 = strong
+    q <- 0.01 # prop of population to use for suppression
+    K <- q * pop
+    
+    # Testing K = 1%: https://pmc.ncbi.nlm.nih.gov/articles/PMC4146608/?utm_source=chatgpt.com
+    
+    density_factor <- 1 / (1 + (host.count / K)^h)
+    
+    p_trans <- p_max * density_factor
+    
+    return(p_trans)
+  }
+  
   p_exit_func <- function(t, t_incubation) {
     if (t < t_incubation) { return(0) }
     else {
-      return(1/10)  # ≈ 0.10/day → mean ~10 days post-incubation illness
+      return(1/7)  # ≈ 0.20/day → mean ~5 days post-incubation illness
     }
   }
   
@@ -295,15 +403,15 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
                          timeDep.nContact=FALSE,
                          diff.nContact=FALSE,
                          
-                         pTrans = p_trans_func_diff,
+                         pTrans = p_trans_density,
                          param.pTrans = list(p_max=p_max_func,t_incubation=t_incub_func),
                          timeDep.pTrans=FALSE,
                          diff.pTrans=TRUE,
-                         hostCount.pTrans = FALSE,
+                         hostCount.pTrans = TRUE,
                          
                          prefix.host="H",
                          print.progress=TRUE,
-                         print.step=100)
+                         print.step=10)
   time_end <- Sys.time()
   duration <- difftime(time_end, time_start, units = "mins")
   
@@ -463,7 +571,7 @@ run_simulation <- function(max_infections,
       log_print(msg)
     }
     
-    # Accept simulations that reach at least 90% of the requested time
+    # Accept simulations that reach at least 80% of the requested time
     min_acceptable_time <- 0.80 * sim_length
     if (final_time < min_acceptable_time) {
       msg <- paste0(
@@ -575,3 +683,36 @@ run_simulation(max_infections = max_infections,
                sim_length = sim_length,
                run_no = run_no,
                out_dir = out_dir)
+
+################
+n <- 10000
+
+p_trans_table <- do.call(
+  rbind,
+  lapply(names(R_local), function(country) {
+    
+    p_max <- p_max_func(n)
+    
+    data.frame(
+      country = country,
+      R_local = R_local[country],
+      p_max = p_max,
+      p_trans = p_max * R_local[country]
+    )
+  })
+)
+
+p_trans_summary <- aggregate(
+  p_trans ~ country,
+  data = p_trans_table,
+  FUN = function(x) {
+    c(
+      min = min(x),
+      mean = mean(x),
+      median = median(x),
+      max = max(x)
+    )
+  }
+)
+
+print(p_trans_summary)

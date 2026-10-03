@@ -1,0 +1,79 @@
+=========================================================================
+Log Path:
+C:/Users/B508680/Documents/phylo_simulation/phylo_simulation/output/simulation_test_1000/log/simulation.log
+Program Path:
+C:/Users/B508680/Documents/phylo_simulation/phylo_simulation/code/simulation_only.R
+Working Directory:
+C:/Users/B508680/Documents/phylo_simulation/phylo_simulation/code
+User Name: B508680
+R Version: 4.4.0 (2024-04-24 ucrt)
+Machine: C2201598 x86-64
+Operating System: Windows 10 x64 build 26200
+Base Packages: stats4 stats graphics grDevices utils datasets methods base
+Other Packages: Biostrings_2.74.1 GenomeInfoDb_1.42.3 XVector_0.46.0
+IRanges_2.40.1 S4Vectors_0.44.0 BiocGenerics_0.52.0 logr_1.3.9 common_1.1.5
+phangorn_2.12.1 ape_5.8-1 seqinr_4.2-36 treeio_1.30.0 ggplot2_4.0.3
+ggtree_3.14.0 dplyr_1.2.1 nosoi_1.1.2 data.table_1.18.4
+Log Start Time: 2026-10-02 14:55:15.664175
+=========================================================================
+
+Attempt 1 | Successful simulations: 0/1 | Seed = 251391770
+
+Starting transmission simulation Timepoint: 14:55:15 Max infected: 1e+07 Time
+limit: 1080
+
+Transmission simulation complete. Time elapsed: 0.05 mins
+
+Attempt 1 rejected: epidemic ended at day 311 (< 90% of 1080 days = 864 days).
+
+Attempt 2 | Successful simulations: 0/1 | Seed = 433213823
+
+Starting transmission simulation Timepoint: 14:55:18 Max infected: 1e+07 Time
+limit: 1080
+
+Transmission simulation complete. Time elapsed: 0 mins
+
+Attempt 2 rejected: epidemic ended at day 34 (< 90% of 1080 days = 864 days).
+
+Attempt 3 | Successful simulations: 0/1 | Seed = 94578980
+
+Starting transmission simulation Timepoint: 14:55:19 Max infected: 1e+07 Time
+limit: 1080
+
+Transmission simulation complete. Time elapsed: 0.01 mins
+
+Attempt 3 rejected: epidemic ended at day 59 (< 90% of 1080 days = 864 days).
+
+Attempt 4 | Successful simulations: 0/1 | Seed = 965111392
+
+Starting transmission simulation Timepoint: 14:55:19 Max infected: 1e+07 Time
+limit: 1080
+
+Transmission simulation complete. Time elapsed: 0.02 mins
+
+Attempt 4 rejected: epidemic ended at day 183 (< 90% of 1080 days = 864 days).
+
+Attempt 5 | Successful simulations: 0/1 | Seed = 77795546
+
+Starting transmission simulation Timepoint: 14:55:21 Max infected: 1e+07 Time
+limit: 1080
+
+Transmission simulation complete. Time elapsed: 0.06 mins
+
+Attempt 5 rejected: epidemic ended at day 414 (< 90% of 1080 days = 864 days).
+
+Attempt 6 | Successful simulations: 0/1 | Seed = 880342994
+
+Starting transmission simulation Timepoint: 14:55:24 Max infected: 1e+07 Time
+limit: 1080
+
+Transmission simulation complete. Time elapsed: 0.33 mins
+
+Successful simulation 1/1 obtained after 6 attempts.
+
+Simulation 1 complete.
+
+=========================================================================
+
+All 1 successful simulations completed after 6 attempts.
+

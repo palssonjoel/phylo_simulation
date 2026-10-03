@@ -1,0 +1,56 @@
+=========================================================================
+Log Path:
+C:/Users/B508680/Documents/phylo_simulation/phylo_simulation/output/simulation_test_density/log/simulation.log
+Program Path:
+C:/Users/B508680/Documents/phylo_simulation/phylo_simulation/code/simulation_only.R
+Working Directory:
+C:/Users/B508680/Documents/phylo_simulation/phylo_simulation/code
+User Name: B508680
+R Version: 4.4.0 (2024-04-24 ucrt)
+Machine: C2201598 x86-64
+Operating System: Windows 10 x64 build 26200
+Base Packages: stats4 stats graphics grDevices utils datasets methods base
+Other Packages: Biostrings_2.74.1 GenomeInfoDb_1.42.3 XVector_0.46.0
+IRanges_2.40.1 S4Vectors_0.44.0 BiocGenerics_0.52.0 logr_1.3.9 common_1.1.5
+phangorn_2.12.1 ape_5.8-1 seqinr_4.2-36 treeio_1.30.0 ggplot2_4.0.3
+ggtree_3.14.0 dplyr_1.2.1 nosoi_1.1.2 data.table_1.18.4
+Log Start Time: 2026-10-03 17:09:59.11506
+=========================================================================
+
+Attempt 1 | Successful simulations: 0/1 | Seed = 769764476
+
+Starting transmission simulation Timepoint: 17:09:59 Max infected: 1e+07 Time
+limit: 150
+
+Transmission simulation complete. Time elapsed: 0 mins
+
+Attempt 1 rejected: epidemic ended at day 12 (< 90% of 150 days = 120 days).
+
+Attempt 2 | Successful simulations: 0/1 | Seed = 479974066
+
+Starting transmission simulation Timepoint: 17:09:59 Max infected: 1e+07 Time
+limit: 150
+
+Transmission simulation complete. Time elapsed: 0 mins
+
+Attempt 2 rejected: epidemic ended at day 16 (< 90% of 150 days = 120 days).
+
+Attempt 3 | Successful simulations: 0/1 | Seed = 588164320
+
+Starting transmission simulation Timepoint: 17:09:59 Max infected: 1e+07 Time
+limit: 150
+
+Transmission simulation complete. Time elapsed: 0.36 mins
+
+Successful simulation 1/1 obtained after 3 attempts.
+
+RStudio not running
+Traceback:
+2: getTransmissionTree(trans_simulation)
+1: run_simulation(max_infections = max_infections, sim_length = sim_length, 
+       run_no = run_no, out_dir = out_dir)
+
+=========================================================================
+Log End Time: 2026-10-03 17:12:39.429991
+Log Elapsed Time: 0 00:02:40
+=========================================================================

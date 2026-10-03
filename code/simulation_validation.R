@@ -30,7 +30,7 @@ library(dplyr)
 library(nosoi)
 
 
-simulation_dirs <- list.dirs("output/simulation/")
+simulation_dirs <- list.dirs("output/simulation_test_density/")
 
 # Remove first and last elements
 simulation_dirs <- simulation_dirs[-1]  # Root folder
@@ -40,7 +40,7 @@ simulation_dirs <- simulation_dirs[-length(simulation_dirs)] # log folder
 # TESTING
 path <- simulation_dirs[1]
 
-sim <- readRDS(paste0(path, "/nosoi_sim.rds"))
+sim <- readRDS(paste0(path, "1/nosoi_sim.rds"))
 
 host_table <- getTableHosts(sim)
 state_table <- getTableState(sim)
@@ -60,6 +60,44 @@ ggplot(dynamics_table |> filter(state == "Denmark"), aes(t, Count, color = state
 # R0
 data = data.frame(R0=getR0(sim)$R0.dist)
 ggplot(data=data, aes(x=R0)) + geom_histogram() + theme_minimal()
+
+# Active hosts per timestep, by state
+dynamics_table |> 
+  group_by(state, t) |> 
+  ggplot(aes(t, Count, color=state)) +
+  geom_line() +
+  labs(
+    title = "Epidemic dynamics",
+    y = "No. Active hosts",
+    x = "time"
+  )
+
+# no introductions into states
+# Look up the infection state of each infector
+infector_states <- host_table[, .(
+  infector_id = hosts.ID,
+  infector_state = inf.in
+)]
+
+# Add infector state to each infected host
+host_table2 <- merge(
+  host_table,
+  infector_states,
+  by.x = "inf.by",
+  by.y = "infector_id",
+  all.x = TRUE
+)
+
+introductions <- host_table2[
+  !is.na(infector_state) &
+    infector_state != inf.in,
+  .(introductions = .N),
+  by = inf.in
+]
+
+setorder(introductions, -introductions)
+
+introductions
 
 #########################################################
 # Load all dynamics tables into one dataframe
