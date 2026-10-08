@@ -4,7 +4,6 @@ library(ggplot2)
 library(patchwork)
 library(treeio)
 
-
 reduce_tree <- function(sim, out_dir) {
   
   seed <- sample.int(999999999, 1)
@@ -21,7 +20,7 @@ reduce_tree <- function(sim, out_dir) {
   index <- slice_head(host_table)
   final <- slice_tail(host_table)
   
-  # Random sampling
+  # Random reduction
   host_subsample <- slice_sample(host_table, n=10000); host_subsample <- rbind(index, host_subsample, final)
   
   # Break time into bins and sample proportionally in each bin
@@ -101,7 +100,7 @@ reduce_tree <- function(sim, out_dir) {
 # Arguments (positional with defaults, no checks)
 args <- commandArgs(trailingOnly = TRUE)
 cat("Arguments received:", length(args), "->", paste(args, collapse = ", "), "\n")
-simulation     <- if(length(args) >= 1) as.numeric(args[1])  
+simulation     <- if(length(args) >= 1) as.character(args[1])  
 out_dir        <- if(length(args) >= 2) as.character(args[2]) 
 
 if(is.null(out_dir)) {
@@ -118,4 +117,6 @@ out_dir <- normalizePath(out_dir, mustWork = TRUE)
 cat("Working directory:", getwd(), "\n")
 cat("Output directory:", out_dir, "\n")
 
-reduce_tree(sim=simulation, out_dir=out_dir)
+sim <- readRDS(simulation)
+
+reduce_tree(sim=sim, out_dir=out_dir)
