@@ -1,0 +1,57 @@
+=========================================================================
+Log Path:
+C:/Users/B508680/Documents/phylo_simulation/phylo_simulation/output/log/simulation_1e6simulation.log
+Program Path:
+C:/Users/B508680/Documents/phylo_simulation/phylo_simulation/code/simulation_only.R
+Working Directory:
+C:/Users/B508680/Documents/phylo_simulation/phylo_simulation/code
+User Name: B508680
+R Version: 4.4.0 (2024-04-24 ucrt)
+Machine: C2201598 x86-64
+Operating System: Windows 10 x64 build 26200
+Base Packages: stats4 stats graphics grDevices utils datasets methods base
+Other Packages: Biostrings_2.74.1 GenomeInfoDb_1.42.3 XVector_0.46.0
+IRanges_2.40.1 S4Vectors_0.44.0 BiocGenerics_0.52.0 logr_1.3.9 common_1.1.5
+phangorn_2.12.1 ape_5.8-1 seqinr_4.2-36 treeio_1.30.0 ggplot2_4.0.3
+ggtree_3.14.0 dplyr_1.2.1 nosoi_1.1.2 data.table_1.18.4
+Log Start Time: 2026-10-07 10:57:52.371675
+=========================================================================
+
+Attempt 1 | Successful simulations: 0/1 | Seed = 694034467
+
+Starting transmission simulation Timepoint: 10:57:52 Max infected: 1e+06 Time
+limit: 5000
+
+Transmission simulation complete. Time elapsed: 9.35 mins
+
+Attempt 1 reached max host threshold (1e+06) at day 279.
+
+Successful simulation 1/1 obtained after 1 attempts.
+
+RStudio not running
+Traceback:
+7: withCallingHandlers(for (j in seq_along(x)) {
+       x[[j]] <- vectbl_assign(x[[j]], i, recycled_value[[j]])
+   }, vctrs_error = function(cnd) {
+       vectbl_recycle_rhs_rows(value, length(i), i_arg, value_arg, 
+           call)
+       abort_assign_incompatible_type(x, recycled_value, j, value_arg, 
+           cnd, call = call)
+   })
+6: tbl_subassign_row(xo, i, value, i_arg, value_arg, call)
+5: tbl_subassign(x, i, j, value, i_arg, j_arg, substitute(value))
+4: `[<-.tbl_df`(`*tmp*`, counter, , value = list(parent = 1029146L, 
+       node = 450L, branch.length = 1L, label = "H-450", host = "H-450", 
+       state = "Denmark", state.x = NA, state.y = NA, time.parent = 73L, 
+       time = 74L))
+3: `[<-`(`*tmp*`, counter, , value = list(parent = 1029146L, node = 450L, 
+       branch.length = 1L, label = "H-450", host = "H-450", state = "Denmark", 
+       state.x = NA, state.y = NA, time.parent = 73L, time = 74L))
+2: getTransmissionTree(trans_simulation)
+1: run_simulation(max_infections = max_infections, sim_length = sim_length, 
+       run_no = run_no, out_dir = out_dir)
+
+=========================================================================
+Log End Time: 2026-10-07 11:09:58.292506
+Log Elapsed Time: 0 00:12:05
+=========================================================================

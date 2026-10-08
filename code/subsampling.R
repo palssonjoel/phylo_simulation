@@ -93,3 +93,5 @@ random_sampling <- function(simulation_dirs, iterations) {
 } 
 
 random_sampling(simulation_dirs, 3)
+
+sim_1000 <-slice_sample(sim, n=1000)

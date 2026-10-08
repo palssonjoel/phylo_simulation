@@ -59,4 +59,6 @@ Author: Joel Pålsson
   - Made p_trans scaled in a deme specific manner based on mismatch betwween
     herd population and proportion of animals expected to be assoiciated with a
     country based on transition matrix.
+ ## 04-10-2026:
+  - Simulations are now only unacceptable if it runs out of time, and the number of hosts are less than the max. 
   

@@ -1,5 +1,6 @@
 # Folders
 data/
+output/*
 output/simulation
 output/simulation_old
 output/simulation_test

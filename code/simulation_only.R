@@ -124,9 +124,37 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   t_incub_func <- function(x){pmax(0, rnorm(x, mean = 2, sd = 0.5))}
   #p_max_func <- function(x){rbeta(x, shape1=1, shape2=3)}
   
-  p_max_func <- function(x) {
-    pmax(0, rbeta(x, shape1 = 3, shape2 = 10))
+  #p_max_func <- function(x) {
+  #  pmax(0, rbeta(x, shape1 = 3, shape2 = 5))
+  #}
+  
+  # According to https://pmc.ncbi.nlm.nih.gov/articles/PMC4146608/#s3
+  # Transmission rate for unvaccinated pigs is 0.285/day
+  # Table 2, sows/gilts). Converting to probability using
+  # 1 - exp(-rate * time) gives 0.2480. Same calculation for the
+  # lower and upper CI (0.091 - 0.9):
+  # p_lower = 0.0870, p_upper = 0.5934
+  
+  p_max_func <- function(n     = 1,
+                         rate  = 0.285,
+                         lower = 0.091,
+                         upper = 0.9,
+                         t     = 1) {
+    
+    z95 <- qnorm(0.975)
+    
+    meanlog  <- log(rate)
+    sd_lower <- (log(rate)  - log(lower)) / z95   # spread below the median
+    sd_upper <- (log(upper) - log(rate))  / z95   # spread above the median
+    
+    z <- rnorm(n)
+    r <- ifelse(z < 0,
+                exp(meanlog + sd_lower * z),
+                exp(meanlog + sd_upper * z))
+    
+    1 - exp(-r * t)    # convert rate draws to probability
   }
+  
   
   p_trans_func_diff <- function(t, current.in, p_max, t_incubation) {
     # This vairation of the p_trans function produces different p_trans values
@@ -180,7 +208,7 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
     return(p_max * R)
   }
   
-  p_trans_density <- function(t, current.in, host.count, p_max, t_incubation) {
+  p_trans_density1 <- function(t, current.in, host.count, p_max, t_incubation) {
     
     R <- NULL
     
@@ -222,7 +250,7 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
     }
     
     # Introduce a density dependent suppression factor
-    K <- 1000   # Scale at which suppression starts
+    K <- 1000    # Scale at which suppression starts
     h <- 1      # Sharpness of suppression
     
     density_factor <- 1 / (1 + (host.count / K)^h)
@@ -232,7 +260,7 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
     return(p_trans)
   }
   
-  p_trans_density <- function(t, current.in, host.count, p_max, t_incubation) {
+  p_trans_density2 <- function(t, prestime, current.in, host.count, p_max, t_incubation) {
     # This adds a density dependent suppression to p_trans_func_diff(),
     # which reduces the number of active hosts in each country after 
     # increasing above the cutoff point K. This is introduced to 
@@ -274,6 +302,11 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
       return(0)
     }
     
+    # Initial boost to allow establishment
+    #if (host.count < 50 && prestime < 100) {
+    #  return(0.5)
+    #}
+    
     # Density dependent suppression
     h <- 2   # sharpess of suppression. 1 = gradual, 2 = strong
     q <- 0.01 # prop of population to use for suppression
@@ -291,7 +324,8 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   p_exit_func <- function(t, t_incubation) {
     if (t < t_incubation) { return(0) }
     else {
-      return(1/7)  # ≈ 0.20/day → mean ~5 days post-incubation illness
+      return(1/5)  # ≈ 0.20/day → mean ~5 days post-incubation illness
+      # supported by: https://pmc.ncbi.nlm.nih.gov/articles/PMC4146608/#s3
     }
   }
   
@@ -306,7 +340,7 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
   # Generate values
   #t_incub <- t_incub_func(n)
   p_max <- p_max_func(n)
-  #n_contacts <- replicate(n, n_contact_func(0))
+  n_contacts <- replicate(n, n_contact_func(0))
   #p_moves <- replicate(n, p_move_func(0))
   
   # Histograms
@@ -327,18 +361,18 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
       y = "Frequency"
     ) +
     theme_minimal()
-  
-  #n_contacts_plot <- ggplot(data.frame(n_contacts), aes(x = n_contacts)) +
-  #  geom_histogram(
-  #    breaks = seq(-0.5, max(n_contacts) + 0.5, by = 1)
-  #  ) +
-  #  labs(
-  #    title = "Distribution of nContact",
-  #    x = "Number of contacts",
-  #    y = "Frequency"
-  #  ) +
-  #  theme_minimal()
-  
+  p_max_plot
+  n_contacts_plot <- ggplot(data.frame(n_contacts), aes(x = n_contacts)) +
+    geom_histogram(
+      breaks = seq(-0.5, max(n_contacts) + 0.5, by = 1)
+    ) +
+    labs(
+      title = "Distribution of nContact",
+      x = "Number of contacts",
+      y = "Frequency"
+    ) +
+    theme_minimal()
+  n_contacts_plot
   #movement_plot <- ggplot(data.frame(p_moves), aes(x = p_moves)) +
   #  geom_histogram() +
   #  labs(
@@ -403,9 +437,9 @@ run_nosoi <- function(transition_matrix, max_infections, simulation_time, out_di
                          timeDep.nContact=FALSE,
                          diff.nContact=FALSE,
                          
-                         pTrans = p_trans_density,
+                         pTrans = p_trans_density2,
                          param.pTrans = list(p_max=p_max_func,t_incubation=t_incub_func),
-                         timeDep.pTrans=FALSE,
+                         timeDep.pTrans=TRUE,
                          diff.pTrans=TRUE,
                          hostCount.pTrans = TRUE,
                          
@@ -573,7 +607,7 @@ run_simulation <- function(max_infections,
     
     # Accept simulations that reach at least 80% of the requested time
     min_acceptable_time <- 0.80 * sim_length
-    if (final_time < min_acceptable_time) {
+    if (final_time < min_acceptable_time && n_hosts < max_infections) {
       msg <- paste0(
         "Attempt ", attempts,
         " rejected: epidemic ended at day ",
@@ -611,6 +645,8 @@ run_simulation <- function(max_infections,
       trans_simulation,
       paste0(simulation_dir, "/nosoi_sim.rds")
     )
+    
+    print("Simulation saved!")
     
     # Get and save transmission tree
     start_time <- Sys.time()
@@ -673,8 +709,8 @@ run_no         <- if(length(args) >= 3) as.numeric(args[3])   else 50
 out_dir        <- if(length(args) >= 4) as.character(args[4]) else "/output/simulation/"
 
 #setwd("..")
-base_dir <- normalizePath("..")
-out_dir <- paste0(base_dir, out_dir)
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+out_dir <- normalizePath(out_dir, mustWork = TRUE)
 
 cat("Working directory:", getwd(), "\n")
 cat("Output directory:", out_dir, "\n")
@@ -684,35 +720,3 @@ run_simulation(max_infections = max_infections,
                run_no = run_no,
                out_dir = out_dir)
 
-################
-n <- 10000
-
-p_trans_table <- do.call(
-  rbind,
-  lapply(names(R_local), function(country) {
-    
-    p_max <- p_max_func(n)
-    
-    data.frame(
-      country = country,
-      R_local = R_local[country],
-      p_max = p_max,
-      p_trans = p_max * R_local[country]
-    )
-  })
-)
-
-p_trans_summary <- aggregate(
-  p_trans ~ country,
-  data = p_trans_table,
-  FUN = function(x) {
-    c(
-      min = min(x),
-      mean = mean(x),
-      median = median(x),
-      max = max(x)
-    )
-  }
-)
-
-print(p_trans_summary)

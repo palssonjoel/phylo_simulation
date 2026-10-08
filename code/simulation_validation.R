@@ -30,7 +30,7 @@ library(dplyr)
 library(nosoi)
 
 
-simulation_dirs <- list.dirs("output/simulation_test_density/")
+simulation_dirs <- list.dirs("output/simulation_test_density_REMOVE/")
 
 # Remove first and last elements
 simulation_dirs <- simulation_dirs[-1]  # Root folder
@@ -40,7 +40,7 @@ simulation_dirs <- simulation_dirs[-length(simulation_dirs)] # log folder
 # TESTING
 path <- simulation_dirs[1]
 
-sim <- readRDS(paste0(path, "1/nosoi_sim.rds"))
+sim <- readRDS(paste0(path, "/nosoi_sim.rds"))
 
 host_table <- getTableHosts(sim)
 state_table <- getTableState(sim)
@@ -65,12 +65,12 @@ ggplot(data=data, aes(x=R0)) + geom_histogram() + theme_minimal()
 dynamics_table |> 
   group_by(state, t) |> 
   ggplot(aes(t, Count, color=state)) +
-  geom_line() +
+  geom_path(linewidth = 1) +
   labs(
     title = "Epidemic dynamics",
     y = "No. Active hosts",
     x = "time"
-  )
+  ) 
 
 # no introductions into states
 # Look up the infection state of each infector

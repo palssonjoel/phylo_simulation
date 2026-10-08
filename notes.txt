@@ -125,6 +125,39 @@ diff.pTrans is TRUE".
 This is a bug, or bad design, in nosoi. The sanity check does a grep to see if all states are explicitly written in the function. I had written a function which produced different p_trans for different countries based on a lookup, but because the states
 weren't exlicitly written in the function, the sanity check by FunctionSanityChecks() failed. Perhaps I should report this bug.
 
+## 03-10-2026
+Density dependence is the way to go, I think. I've created two different versions: (1) a suppression factor
+is activated at a global threshold of active hosts, e.g. 1000 or 10,000. This effectively tapers off the spread
+and slows it to an endemic pattern, while still allowing high export countries to maintain a population of hosts.
+Or (2), in which the suppression factor kicks in at a given percentage of the total pig population in each country. Testing it now, I set it to 1%. This means that when the number of active, infective hosts are 1% of the total state population, p_trans will be multiplied by < 0.5. As it keeps growing, this factor will grow. This is the one I'm testing on the HPC now, with time ranges of 1, 5, 10, and 20 years. The hope is that spread can be maintained for at least 5 years without dying out in Denmark or the growth being explosive.
+
+However, 1% still allows for active host numbers in the tens of thousands in e.g. Germany and Denmark. As such, it might not give the strength of suppression I want. Thus, I will later also try to set up the global threshold method, and set it at e.g. 5,000
+
+## 04-10-2026
+Running a test of both density dependent functions today, both for 1, 5, 10, and 20 years. Test 1 "_dens1" is using the global threshold set to 1,000, after which no. of active hosts will taper off. Test 2 "_dens2" is using the population-dependent threshold of 1% of the states population. I suspect that this one might run out of hosts before time runs out, but this is okay now since those runs will now be accepted.
+
+################################################################################
+# Week 5
+
+## 07-10-2026
+Transmission chain from a full run will easily exceed 10,000,000 cumulative hosts, especially if run for many years. I don't have CPU hour estimate complete for a 1,000,000 chain yet, but I don't think it's feasible to 
+extract the entire transmission tree. Instead, my idea is to subsample the transmission tree in a random manner,
+which retains its topology. From this, I extract the host IDs (and who they were infected by) and apply it to the other components of the nosoi object, effectively reducing the entire simulation. Then, I can create a transmission tree of 10,000 - 100,000 hosts, which still well exceeds what would be expected to know through surveillance. I have created a .nexus tree with 10,000 hosts and will attempt to simulate sequences along it using iqtree now. Later, perhaps I can utilize nosoi sampleTransmissionTree() function on the tree with the sequences. 
+
+An issue with the tree reduction as it stands now is that the dynamics are not retained. The total sim has clear logistic curves which flatten, as expected, but the reduced epidemic dynamics look more like a normal distribution, where the largest number of active hosts are in the middle of the simulation. 
+
+Doing this, and then simulating sequence evolution with IQTree works, in the sense that I do indeed get an alignment. I ran it with different substitution rates for the different gene segments. I'm not exactly sure what to do from here. Obviously, on this alignment I can run MASCOT and BEASTX CTMC, or IQTree + StructCoalescent/saasi. But then what? Do I compare this output with the transmission tree? Or do I create a NEW tree with the alignment appended somehow? Or is the next step here to subsample the alignment?
+
+Steps as of now:
+ 1. Simulate epidemic for 5-10 years, ideally
+ 2. Pick a random sample from this to reduce the size to make transmission tree feasible
+ 3. Run IQTree alisim to simulate sequences
+ 4. Run tools?
+
+Questions right now:
+ 1. Is the approach of reducing the transmission tree to say 100,000 hosts a reasonable one?
+ 2. When do I sample from the tree? Before or after simulating sequences?
+ 
 
 
 
