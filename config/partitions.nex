@@ -1,0 +1,23 @@
+#NEXUS
+begin sets;
+
+    charset NS  = 1-841;
+    charset MP  = 842-1850;
+    charset HA  = 1851-3548;
+    charset NP  = 3549-5042;
+    charset PB2 = 5043-7322;
+    charset PB1 = 7323-9593;
+    charset PA  = 9594-11741;
+    charset NA  = 11742-13148;
+
+    charpartition mine =
+        HKY:NS{0.7500},
+        HKY:MP{0.3289},
+        HKY:HA{1.0000},
+        HKY:NP{0.1447},
+        HKY:PB2{0.3868},
+        HKY:PB1{0.3250},
+        HKY:PA{0.2803},
+        HKY:NA{0.9079};
+
+end
